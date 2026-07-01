@@ -19,6 +19,13 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import rankInMapsSpinning from "./assets/icons/rank-in-maps-spinning.gif";
+import speakIcon from "./assets/icons/speak.png";
+import phoneScrollingIcon from "./assets/icons/Phone Scrolling.png";
+import punchListIcon from "./assets/icons/Punch List.png";
+import shopIcon from "./assets/icons/shop.png";
+import puzzleSolvingIcon from "./assets/icons/Puzzle Solving.png";
+import thailandIcon from "./assets/icons/Thailand.png";
+import beachIcon from "./assets/icons/Beach.png";
 
 type ViewState = "landing" | "loading_search" | "setup" | "loading_generate" | "output";
 
@@ -332,7 +339,12 @@ export default function App() {
                 </p>
 
                 {/* Instant Search Box */}
-                <div className="bg-[#FFF1CE] p-2 rounded-xl border border-forest/20 shadow-sm max-w-xl">
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.1 }}
+                  className="bg-[#FFF1CE] p-2 rounded-xl border border-forest/20 shadow-sm max-w-xl"
+                >
                   <div className="flex gap-2">
                     <div className="flex-1 flex items-center gap-2.5 px-3">
                       <Search className="w-5 h-5 text-forest/50 shrink-0" />
@@ -354,7 +366,7 @@ export default function App() {
                       <ArrowRight className="w-4 h-4" />
                     </button>
                   </div>
-                </div>
+                </motion.div>
 
                 {/* Quick Selection Suggestions */}
                 <div className="flex flex-col gap-2.5">
@@ -384,7 +396,12 @@ export default function App() {
 
               {/* Right Column: Hero Illustration (Premium Mockup) */}
               <div className="lg:col-span-5 flex justify-center">
-                <div className="relative max-w-md w-full aspect-[4/3] rounded-2xl overflow-hidden border border-forest/18 bg-[#FFF1CE] p-3 shadow-sm">
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.96, y: 15 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  transition={{ duration: 0.5, ease: "easeOut" }}
+                  className="relative max-w-md w-full aspect-[4/3] rounded-2xl overflow-hidden border border-forest/18 bg-[#FFF1CE] p-3 shadow-sm"
+                >
                   <div className="w-full h-full rounded-xl overflow-hidden relative group">
                     <img 
                       src="/src/assets/images/thailand_local_seo_hero_1782895916184.jpg" 
@@ -404,14 +421,14 @@ export default function App() {
                       </div>
                     </div>
                   </div>
-                </div>
+                </motion.div>
               </div>
             </section>
 
             {/* Why & Strategy Breakdown Section */}
             <section className="bg-[#FAE8CC] border-t border-forest/15 py-16">
               <div className="max-w-7xl mx-auto px-6 sm:px-10">
-                <div className="text-center max-w-3xl mx-auto mb-12">
+                <div className="text-center max-w-3xl mx-auto mb-16">
                   <h3 className="text-2xl sm:text-3xl font-display font-semibold text-forest tracking-tight">
                     The Science Behind Our Thailand Local Optimization
                   </h3>
@@ -420,45 +437,81 @@ export default function App() {
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-10 pt-4">
                   {/* Card 1 */}
-                  <div className="bg-[#F1CFAE]/15 rounded-xl p-6 border border-forest/12 flex flex-col gap-4">
-                    <div className="w-10 h-10 bg-forest/10 rounded-lg flex items-center justify-center text-forest shrink-0">
-                      <Globe className="w-5 h-5" />
+                  <motion.div 
+                    initial={{ opacity: 0, y: 15 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.4 }}
+                    whileHover={{ y: -4, transition: { duration: 0.2 } }}
+                    className="bg-[#F1CFAE]/15 rounded-xl p-6 border border-forest/12 flex flex-col gap-4 items-start relative group hover:shadow-md pt-10"
+                  >
+                    <div className="absolute -top-7 -left-3 z-20">
+                      <img 
+                        src={speakIcon} 
+                        alt="Bilingual Search Icon" 
+                        referrerPolicy="no-referrer" 
+                        className="w-16 h-16 object-contain transform group-hover:scale-120 group-hover:rotate-6 transition-transform duration-300 drop-shadow-md" 
+                      />
                     </div>
-                    <div>
+                    <div className="mt-2">
                       <h4 className="text-base font-bold text-forest font-display">Bilingual Search Capture</h4>
                       <p className="text-xs sm:text-sm text-charcoal/80 mt-2 leading-relaxed">
                         Local searchers in Bangkok, Chiang Mai, and Phuket utilize English and Central Thai interchangeably. Dual-language structures ensure your listing indices index comprehensively across both populations.
                       </p>
                     </div>
-                  </div>
+                  </motion.div>
 
                   {/* Card 2 */}
-                  <div className="bg-[#F1CFAE]/15 rounded-xl p-6 border border-forest/12 flex flex-col gap-4">
-                    <div className="w-10 h-10 bg-forest/10 rounded-lg flex items-center justify-center text-forest shrink-0">
-                      <Layers className="w-5 h-5" />
+                  <motion.div 
+                    initial={{ opacity: 0, y: 15 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.4, delay: 0.1 }}
+                    whileHover={{ y: -4, transition: { duration: 0.2 } }}
+                    className="bg-[#F1CFAE]/15 rounded-xl p-6 border border-forest/12 flex flex-col gap-4 items-start relative group hover:shadow-md pt-10"
+                  >
+                    <div className="absolute -top-7 -left-3 z-20">
+                      <img 
+                        src={phoneScrollingIcon} 
+                        alt="Read More UX Icon" 
+                        referrerPolicy="no-referrer" 
+                        className="w-16 h-16 object-contain transform group-hover:scale-120 group-hover:-rotate-6 transition-transform duration-300 drop-shadow-md" 
+                      />
                     </div>
-                    <div>
+                    <div className="mt-2">
                       <h4 className="text-base font-bold text-forest font-display font-medium">The "Read More" UX Alignment</h4>
                       <p className="text-xs sm:text-sm text-charcoal/80 mt-2 leading-relaxed">
                         By placing exactly 2 vertical carriage breaks after character-bracketed Thai text, we trick Google into formatting the English translation directly behind a clean "Read More" click option.
                       </p>
                     </div>
-                  </div>
+                  </motion.div>
 
                   {/* Card 3 */}
-                  <div className="bg-[#F1CFAE]/15 rounded-xl p-6 border border-forest/12 flex flex-col gap-4">
-                    <div className="w-10 h-10 bg-forest/10 rounded-lg flex items-center justify-center text-forest shrink-0">
-                      <Maximize2 className="w-5 h-5" />
+                  <motion.div 
+                    initial={{ opacity: 0, y: 15 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.4, delay: 0.2 }}
+                    whileHover={{ y: -4, transition: { duration: 0.2 } }}
+                    className="bg-[#F1CFAE]/15 rounded-xl p-6 border border-forest/12 flex flex-col gap-4 items-start relative group hover:shadow-md pt-10"
+                  >
+                    <div className="absolute -top-7 -left-3 z-20">
+                      <img 
+                        src={punchListIcon} 
+                        alt="Length Check Icon" 
+                        referrerPolicy="no-referrer" 
+                        className="w-16 h-16 object-contain transform group-hover:scale-120 group-hover:rotate-6 transition-transform duration-300 drop-shadow-md" 
+                      />
                     </div>
-                    <div>
+                    <div className="mt-2">
                       <h4 className="text-base font-bold text-forest font-display">Mathematical Length Check</h4>
                       <p className="text-xs sm:text-sm text-charcoal/80 mt-2 leading-relaxed">
                         Google enforces a rigid 750-character ceiling on business bios. We verify and clamp character volumes dynamically so your descriptions publish seamlessly without truncation.
                       </p>
                     </div>
-                  </div>
+                  </motion.div>
                 </div>
               </div>
             </section>
@@ -466,27 +519,45 @@ export default function App() {
             {/* How it Works Step Section */}
             <section className="bg-[#F1CFAE]/10 py-16 border-t border-forest/15">
               <div className="max-w-7xl mx-auto px-6 sm:px-10">
-                <div className="text-center max-w-2xl mx-auto mb-12">
+                <div className="text-center max-w-2xl mx-auto mb-16">
                   <h3 className="text-xl sm:text-2xl font-display font-semibold text-forest uppercase tracking-wider">
                     How it works
                   </h3>
                   <div className="w-12 h-1 bg-terracotta mx-auto mt-3 rounded"></div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 pt-4">
                   {[
-                    { num: "01", title: "Search Store", desc: "Type your business name. Live grounding pulls map records." },
-                    { num: "02", title: "Verify SEO Core", desc: "Select target district and primary local SEO keyword." },
-                    { num: "03", title: "Bilingual Draft", desc: "Our Gemini agent writes localized, character-balanced content." },
-                    { num: "04", title: "Deploy Copy", desc: "Click copy with visual validation and instantly paste on GMF." }
+                    { num: "01", title: "Search Store", desc: "Type your business name. Live grounding pulls map records.", icon: shopIcon },
+                    { num: "02", title: "Verify SEO Core", desc: "Select target district and primary local SEO keyword.", icon: puzzleSolvingIcon },
+                    { num: "03", title: "Bilingual Draft", desc: "Our Gemini agent writes localized, character-balanced content.", icon: thailandIcon },
+                    { num: "04", title: "Deploy Copy", desc: "Click copy with visual validation and instantly paste on GMF.", icon: beachIcon }
                   ].map((step, idx) => (
-                    <div key={idx} className="bg-[#FAE8CC] rounded-xl p-6 border border-forest/15 flex flex-col relative overflow-hidden group">
-                      <span className="text-3xl font-display font-extrabold text-[#CD966B]/30 absolute right-4 top-2 group-hover:text-timber/35 transition-colors">
-                        {step.num}
-                      </span>
-                      <h4 className="text-sm font-bold text-forest z-10">{step.title}</h4>
+                    <motion.div 
+                      key={idx} 
+                      initial={{ opacity: 0, y: 15 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.4, delay: idx * 0.1 }}
+                      whileHover={{ y: -4, transition: { duration: 0.2 } }}
+                      className="bg-[#FAE8CC] rounded-xl p-6 border border-forest/15 flex flex-col relative group hover:shadow-md pt-10"
+                    >
+                      <div className="absolute -top-7 -left-3 z-20">
+                        <img 
+                          src={step.icon} 
+                          alt={step.title} 
+                          referrerPolicy="no-referrer" 
+                          className="w-16 h-16 object-contain transform group-hover:scale-120 group-hover:rotate-12 transition-transform duration-300 drop-shadow-md" 
+                        />
+                      </div>
+                      <div className="flex justify-end items-start mb-2 z-10">
+                        <span className="text-3xl font-display font-extrabold text-[#CD966B]/30 group-hover:text-timber/35 transition-colors">
+                          {step.num}
+                        </span>
+                      </div>
+                      <h4 className="text-sm font-bold text-forest z-10 mt-2">{step.title}</h4>
                       <p className="text-xs text-forest/70 mt-2 leading-relaxed z-10">{step.desc}</p>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
               </div>
@@ -565,7 +636,12 @@ export default function App() {
 
             <form onSubmit={handleGenerate} className="grid grid-cols-1 md:grid-cols-12 gap-8">
               {/* Left Column Form */}
-              <div className="md:col-span-7 bg-[#FFF1CE] border border-forest/18 rounded-2xl p-6 flex flex-col gap-6">
+              <motion.div 
+                initial={{ opacity: 0, x: -12 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.4 }}
+                className="md:col-span-7 bg-[#FFF1CE] border border-forest/18 rounded-2xl p-6 flex flex-col gap-6"
+              >
                 
                 {/* Business Name */}
                 <div>
@@ -654,10 +730,15 @@ export default function App() {
                   </div>
                 </div>
 
-              </div>
+              </motion.div>
 
               {/* Right Column Form */}
-              <div className="md:col-span-5 flex flex-col gap-6">
+              <motion.div 
+                initial={{ opacity: 0, x: 12 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.4, delay: 0.1 }}
+                className="md:col-span-5 flex flex-col gap-6"
+              >
                 
                 {/* Core Services / Bullets */}
                 <div className="bg-[#FFF1CE] border border-forest/18 rounded-2xl p-6 flex-1 flex flex-col">
@@ -716,7 +797,7 @@ export default function App() {
                   <Sparkles className="w-4 h-4 animate-pulse" />
                   Generate Bilingual Copy
                 </button>
-              </div>
+              </motion.div>
             </form>
           </div>
         )}
