@@ -26,10 +26,50 @@ import shopIcon from "./assets/icons/shop.png";
 import puzzleSolvingIcon from "./assets/icons/Puzzle Solving.png";
 import thailandIcon from "./assets/icons/Thailand.png";
 import beachIcon from "./assets/icons/Beach.png";
+import { translations, Language } from "./translations";
 
 type ViewState = "landing" | "loading_search" | "setup" | "loading_generate" | "output";
 
+// Mapping of suggested areas between en and th
+const areaMapping: Record<string, string> = {
+  "Thonglor, Bangkok": "ทองหล่อ, กรุงเทพฯ",
+  "Sathorn, Bangkok": "สาทร, กรุงเทพฯ",
+  "Nimman, Chiang Mai": "นิมมาน, เชียงใหม่",
+  "Patong, Phuket": "ป่าตอง, ภูเก็ต",
+  "Pattaya": "พัทยา",
+  "Bophut, Koh Samui": "บ่อผุด, เกาะสมุย",
+  "ทองหล่อ, กรุงเทพฯ": "Thonglor, Bangkok",
+  "สาทร, กรุงเทพฯ": "Sathorn, Bangkok",
+  "นิมมาน, เชียงใหม่": "Nimman, Chiang Mai",
+  "ป่าตอง, ภูเก็ต": "Patong, Phuket",
+  "พัทยา": "Pattaya",
+  "บ่อผุด, เกาะสมุย": "Bophut, Koh Samui"
+};
+
+// Mapping of suggested features between en and th
+const featureMapping: Record<string, string> = {
+  "free parking": "มีที่จอดรถฟรี",
+  "outdoor terrace": "ระเบียงนั่งกลางแจ้ง",
+  "English-speaking staff": "พนักงานสื่อสารภาษาอังกฤษได้",
+  "BTS/MRT close": "ใกล้สถานี BTS/MRT",
+  "free Wi-Fi": "ฟรีบริการ Wi-Fi",
+  "pet friendly": "ต้อนรับสัตว์เลี้ยง",
+  "rooftop seating": "ที่นั่งบนดาดฟ้า",
+  "halal options": "มีตัวเลือกอาหารฮาลาล",
+  "vegetarian-friendly": "เหมาะสำหรับผู้ทานมังสวิรัติ",
+  "มีที่จอดรถฟรี": "free parking",
+  "ระเบียงนั่งกลางแจ้ง": "outdoor terrace",
+  "พนักงานสื่อสารภาษาอังกฤษได้": "English-speaking staff",
+  "ใกล้สถานี BTS/MRT": "BTS/MRT close",
+  "ฟรีบริการ Wi-Fi": "free Wi-Fi",
+  "ต้อนรับสัตว์เลี้ยง": "pet friendly",
+  "ที่นั่งบนดาดฟ้า": "rooftop seating",
+  "มีตัวเลือกอาหารฮาลาล": "halal options",
+  "เหมาะสำหรับผู้ทานมังสวิรัติ": "vegetarian-friendly"
+};
+
 export default function App() {
+  const [lang, setLang] = useState<Language>("en");
   const [view, setView] = useState<ViewState>("landing");
   const [searchQuery, setSearchQuery] = useState("");
   
@@ -53,26 +93,72 @@ export default function App() {
   const [progress, setProgress] = useState(0);
   const [loadingMsg, setLoadingMsg] = useState("");
 
-  const suggestedAreas = [
-    "Thonglor, Bangkok",
-    "Sathorn, Bangkok",
-    "Nimman, Chiang Mai",
-    "Patong, Phuket",
-    "Pattaya",
-    "Bophut, Koh Samui"
-  ];
+  const t = translations[lang];
+  const suggestedAreas = t.suggestedAreas;
+  const suggestedFeatures = t.suggestedFeatures;
 
-  const suggestedFeatures = [
-    "free parking",
-    "outdoor terrace",
-    "English-speaking staff",
-    "BTS/MRT close",
-    "free Wi-Fi",
-    "pet friendly",
-    "rooftop seating",
-    "halal options",
-    "vegetarian-friendly"
-  ];
+  // Language selection auto-detection on mount and query parameter sync
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const langParam = params.get("lang");
+    if (langParam === "th" || langParam === "en") {
+      setLang(langParam as Language);
+      localStorage.setItem("gmaps_lang", langParam);
+      return;
+    }
+
+    const savedLang = localStorage.getItem("gmaps_lang");
+    if (savedLang === "th" || savedLang === "en") {
+      setLang(savedLang as Language);
+      return;
+    }
+
+    const browserLang = navigator.language || (navigator.languages && navigator.languages[0]);
+    if (browserLang && browserLang.toLowerCase().startsWith("th")) {
+      setLang("th");
+      setDistrict("ทองหล่อ, กรุงเทพฯ");
+    } else {
+      setLang("en");
+      setDistrict("Thonglor, Bangkok");
+    }
+  }, []);
+
+  const handleToggleLang = (selectedLang: Language) => {
+    setLang(selectedLang);
+    localStorage.setItem("gmaps_lang", selectedLang);
+    
+    // Smoothly map district to match target language if it exists in the mapping
+    if (areaMapping[district]) {
+      setDistrict(areaMapping[district]);
+    } else if (selectedLang === "th" && district === "Thonglor, Bangkok") {
+      setDistrict("ทองหล่อ, กรุงเทพฯ");
+    } else if (selectedLang === "en" && district === "ทองหล่อ, กรุงเทพฯ") {
+      setDistrict("Thonglor, Bangkok");
+    }
+
+    // Map bullet points to match target language if they contain quick suggestions
+    if (bulletPoints) {
+      const updatedLines = bulletPoints
+        .split("\n")
+        .map((line) => {
+          const trimmed = line.trim();
+          if (trimmed.startsWith("-")) {
+            const content = trimmed.substring(1).trim();
+            if (featureMapping[content]) {
+              return `- ${featureMapping[content]}`;
+            }
+          } else if (featureMapping[trimmed]) {
+            return `- ${featureMapping[trimmed]}`;
+          }
+          return line;
+        });
+      setBulletPoints(updatedLines.join("\n"));
+    }
+
+    const newUrl = new URL(window.location.href);
+    newUrl.searchParams.set("lang", selectedLang);
+    window.history.replaceState({}, "", newUrl.toString());
+  };
 
   const injectBulletSuggestion = (suggestion: string) => {
     const lines = bulletPoints
@@ -107,7 +193,7 @@ export default function App() {
     let interval: NodeJS.Timeout;
     if (view === "loading_generate") {
       setProgress(0);
-      setLoadingMsg("Initializing bilingual copywriter agent...");
+      setLoadingMsg("Getting ready to write your descriptions...");
       interval = setInterval(() => {
         setProgress((prev) => {
           const next = prev + Math.floor(Math.random() * 8) + 4;
@@ -116,15 +202,15 @@ export default function App() {
             return 100;
           }
           if (next < 20) {
-            setLoadingMsg(`Analyzing regional local search patterns for ${district || "Thailand"}...`);
+            setLoadingMsg(`Checking details for ${district || "Thailand"}...`);
           } else if (next < 45) {
-            setLoadingMsg("Crafting high-relevance Central Thai GMF copy...");
+            setLoadingMsg("Writing the Thai version...");
           } else if (next < 70) {
-            setLoadingMsg("Developing fluent localized English description translation...");
+            setLoadingMsg("Writing the English translation...");
           } else if (next < 88) {
-            setLoadingMsg("Injecting vertical breaks to calibrate 'Read more' link placement...");
+            setLoadingMsg("Formatting the line spacing...");
           } else {
-            setLoadingMsg("Validating 750-character search constraints...");
+            setLoadingMsg("Checking the letter limit...");
           }
           return next;
         });
@@ -280,20 +366,46 @@ export default function App() {
           <div className="w-9 h-9 rounded-xl flex items-center justify-center overflow-hidden border border-forest/20 shadow-sm">
             <img 
               src={rankInMapsSpinning} 
-              alt="Bilingual GMF Builder Logo" 
+              alt={t.appTitle} 
               referrerPolicy="no-referrer"
               className="w-full h-full object-contain"
             />
           </div>
           <div>
             <h1 className="text-sm sm:text-base font-display font-semibold tracking-tight text-forest flex items-center gap-2">
-              Bilingual GMF Builder <span className="text-[10px] text-forest bg-[#FFF1CE] px-2.5 py-1 rounded-lg border border-forest/12 font-mono font-semibold">THAILAND SEO</span>
+              {t.appTitle} <span className="text-[10px] text-forest bg-[#FFF1CE] px-2.5 py-1 rounded-lg border border-forest/12 font-mono font-semibold">{t.appSubtitle}</span>
             </h1>
           </div>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
+          {/* Flag language toggle switch */}
+          <div className="bg-[#FFF1CE] border border-forest/20 rounded-lg p-1 flex items-center gap-1 shadow-sm shrink-0">
+            <button
+              onClick={() => handleToggleLang("en")}
+              type="button"
+              className={`text-xs px-2.5 py-1 rounded-md font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                lang === "en"
+                  ? "bg-forest text-[#FAE8CC] shadow-xs"
+                  : "text-forest/60 hover:text-forest hover:bg-[#FAE8CC]"
+              }`}
+            >
+              <span>🇺🇸</span> <span className="hidden xs:inline">EN</span>
+            </button>
+            <button
+              onClick={() => handleToggleLang("th")}
+              type="button"
+              className={`text-xs px-2.5 py-1 rounded-md font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                lang === "th"
+                  ? "bg-forest text-[#FAE8CC] shadow-xs"
+                  : "text-forest/60 hover:text-forest hover:bg-[#FAE8CC]"
+              }`}
+            >
+              <span>🇹🇭</span> <span className="hidden xs:inline">ไทย</span>
+            </button>
+          </div>
+
           <span className="hidden sm:inline text-xs font-mono bg-[#FFF1CE] text-forest/70 px-2.5 py-1 rounded-lg border border-forest/12">
-            v2.5-flash-optimized
+            {t.simpleEasy}
           </span>
           {view !== "landing" && (
             <button 
@@ -301,7 +413,7 @@ export default function App() {
               className="text-xs font-semibold text-forest hover:bg-forest hover:text-cream border border-forest/30 rounded-lg px-3 py-1.5 transition-all cursor-pointer"
             >
               <ChevronLeft className="w-3.5 h-3.5 inline mr-1" />
-              New Search
+              {t.newSearch}
             </button>
           )}
         </div>
@@ -327,15 +439,15 @@ export default function App() {
               <div className="lg:col-span-7 flex flex-col gap-6">
                 <div className="inline-flex items-center gap-2 bg-[#FFF1CE] border border-forest/18 rounded-lg py-1.5 px-3.5 w-fit">
                   <span className="text-xs">🇹🇭</span>
-                  <span className="text-xs font-semibold text-forest uppercase tracking-wider font-display">Thailand Google Maps Optimizer</span>
+                  <span className="text-xs font-semibold text-forest uppercase tracking-wider font-display">{t.heroBadge}</span>
                 </div>
                 
                 <h2 className="text-3xl sm:text-4xl md:text-5xl font-display font-semibold text-forest leading-tight tracking-tight">
-                  Master Thailand's <span className="text-timber">Bilingual Search</span> Indexes
+                  {t.heroTitle1}<span className="text-timber">{t.heroTitleHighlight}</span>
                 </h2>
                 
                 <p className="text-sm sm:text-base text-charcoal/90 leading-relaxed max-w-2xl">
-                  Google maintains distinct local databases for English and Thai queries in Thailand. We generate optimized local SEO strings that place critical Thai keywords in front, with calculated line spacing that forces a beautiful, clickable <strong className="text-forest font-semibold">"Read more"</strong> tag exactly before your English content.
+                  {t.heroDescription}
                 </p>
 
                 {/* Instant Search Box */}
@@ -353,7 +465,7 @@ export default function App() {
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" && searchQuery && handleLandingSearch(searchQuery)}
-                        placeholder="Search your business name (e.g. Starbucks Thonglor)..."
+                        placeholder={t.searchPlaceholder}
                         className="w-full text-sm sm:text-base outline-none bg-transparent placeholder-forest/40 text-forest font-medium"
                       />
                     </div>
@@ -362,17 +474,17 @@ export default function App() {
                       disabled={!searchQuery}
                       className="bg-forest hover:bg-forest/90 disabled:opacity-50 text-[#FAE8CC] font-bold text-xs sm:text-sm px-5 py-3 rounded-lg transition-all flex items-center gap-2 shrink-0 cursor-pointer animate-in"
                     >
-                      Search & Start
+                      {t.searchButton}
                       <ArrowRight className="w-4 h-4" />
                     </button>
                   </div>
                 </motion.div>
-
+ 
                 {/* Quick Selection Suggestions */}
                 <div className="flex flex-col gap-2.5">
                   <p className="text-xs font-semibold text-forest/70 uppercase tracking-wider flex items-center gap-1.5">
                     <TrendingUp className="w-3.5 h-3.5 text-forest" />
-                    Or test with popular Thailand venues:
+                    {t.placesSuggestionTitle}
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {presetExamples.map((item, idx) => (
@@ -388,7 +500,7 @@ export default function App() {
                       onClick={() => setView("setup")}
                       className="text-xs bg-[#CD966B]/20 hover:bg-[#CD966B]/45 text-forest rounded-lg px-3.5 py-2 font-bold transition-all border border-forest/15 cursor-pointer"
                     >
-                      ⚡ Custom Start
+                      {t.writeOwnButton}
                     </button>
                   </div>
                 </div>
@@ -405,7 +517,7 @@ export default function App() {
                   <div className="w-full h-full rounded-xl overflow-hidden relative group">
                     <img 
                       src="/src/assets/images/thailand_local_seo_hero_1782895916184.jpg" 
-                      alt="Thailand Local SEO Illustration" 
+                      alt={t.heroImageAlt} 
                       referrerPolicy="no-referrer"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                     />
@@ -413,10 +525,10 @@ export default function App() {
                       <div className="bg-[#FAE8CC]/95 backdrop-blur-sm rounded-xl p-3 border border-forest/15">
                         <div className="flex items-center gap-2 mb-1.5">
                           <span className="w-2.5 h-2.5 rounded-full bg-forest animate-pulse"></span>
-                          <p className="text-[10px] font-bold text-forest uppercase tracking-wider">Live Local SEO Grounding</p>
+                          <p className="text-[10px] font-bold text-forest uppercase tracking-wider">{t.realtimeSearch}</p>
                         </div>
                         <p className="text-xs text-charcoal leading-tight font-medium">
-                          Bilingual optimization helps Thai storefronts score higher on Google Business Profile rankings by covering all user search query profiles.
+                          {t.heroCardText}
                         </p>
                       </div>
                     </div>
@@ -424,19 +536,19 @@ export default function App() {
                 </motion.div>
               </div>
             </section>
-
+ 
             {/* Why & Strategy Breakdown Section */}
             <section className="bg-[#FAE8CC] border-t border-forest/15 py-16">
               <div className="max-w-7xl mx-auto px-6 sm:px-10">
                 <div className="text-center max-w-3xl mx-auto mb-16">
                   <h3 className="text-2xl sm:text-3xl font-display font-semibold text-forest tracking-tight">
-                    The Science Behind Our Thailand Local Optimization
+                    {t.whyTitle}
                   </h3>
                   <p className="text-sm sm:text-base text-forest/70 mt-2">
-                    Unlike standard generative writeups, our local algorithm formats and balances metadata specifically for Thailand GMF standards.
+                    {t.whySubtitle}
                   </p>
                 </div>
-
+ 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-10 pt-4">
                   {/* Card 1 */}
                   <motion.div 
@@ -456,13 +568,13 @@ export default function App() {
                       />
                     </div>
                     <div className="mt-2">
-                      <h4 className="text-base font-bold text-forest font-display">Bilingual Search Capture</h4>
+                      <h4 className="text-base font-bold text-forest font-display">{t.whyCard1Title}</h4>
                       <p className="text-xs sm:text-sm text-charcoal/80 mt-2 leading-relaxed">
-                        Local searchers in Bangkok, Chiang Mai, and Phuket utilize English and Central Thai interchangeably. Dual-language structures ensure your listing indices index comprehensively across both populations.
+                        {t.whyCard1Desc}
                       </p>
                     </div>
                   </motion.div>
-
+ 
                   {/* Card 2 */}
                   <motion.div 
                     initial={{ opacity: 0, y: 15 }}
@@ -481,13 +593,13 @@ export default function App() {
                       />
                     </div>
                     <div className="mt-2">
-                      <h4 className="text-base font-bold text-forest font-display font-medium">The "Read More" UX Alignment</h4>
+                      <h4 className="text-base font-bold text-forest font-display font-medium">{t.whyCard2Title}</h4>
                       <p className="text-xs sm:text-sm text-charcoal/80 mt-2 leading-relaxed">
-                        By placing exactly 2 vertical carriage breaks after character-bracketed Thai text, we trick Google into formatting the English translation directly behind a clean "Read More" click option.
+                        {t.whyCard2Desc}
                       </p>
                     </div>
                   </motion.div>
-
+ 
                   {/* Card 3 */}
                   <motion.div 
                     initial={{ opacity: 0, y: 15 }}
@@ -506,32 +618,32 @@ export default function App() {
                       />
                     </div>
                     <div className="mt-2">
-                      <h4 className="text-base font-bold text-forest font-display">Mathematical Length Check</h4>
+                      <h4 className="text-base font-bold text-forest font-display">{t.whyCard3Title}</h4>
                       <p className="text-xs sm:text-sm text-charcoal/80 mt-2 leading-relaxed">
-                        Google enforces a rigid 750-character ceiling on business bios. We verify and clamp character volumes dynamically so your descriptions publish seamlessly without truncation.
+                        {t.whyCard3Desc}
                       </p>
                     </div>
                   </motion.div>
                 </div>
               </div>
             </section>
-
+ 
             {/* How it Works Step Section */}
             <section className="bg-[#F1CFAE]/10 py-16 border-t border-forest/15">
               <div className="max-w-7xl mx-auto px-6 sm:px-10">
                 <div className="text-center max-w-2xl mx-auto mb-16">
                   <h3 className="text-xl sm:text-2xl font-display font-semibold text-forest uppercase tracking-wider">
-                    How it works
+                    {t.howItWorksTitle}
                   </h3>
                   <div className="w-12 h-1 bg-terracotta mx-auto mt-3 rounded"></div>
                 </div>
-
+ 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 pt-4">
                   {[
-                    { num: "01", title: "Search Store", desc: "Type your business name. Live grounding pulls map records.", icon: shopIcon },
-                    { num: "02", title: "Verify SEO Core", desc: "Select target district and primary local SEO keyword.", icon: puzzleSolvingIcon },
-                    { num: "03", title: "Bilingual Draft", desc: "Our Gemini agent writes localized, character-balanced content.", icon: thailandIcon },
-                    { num: "04", title: "Deploy Copy", desc: "Click copy with visual validation and instantly paste on GMF.", icon: beachIcon }
+                    { num: "01", title: t.step1Title, desc: t.step1Desc, icon: shopIcon },
+                    { num: "02", title: t.step2Title, desc: t.step2Desc, icon: puzzleSolvingIcon },
+                    { num: "03", title: t.step3Title, desc: t.step3Desc, icon: thailandIcon },
+                    { num: "04", title: t.step4Title, desc: t.step4Desc, icon: beachIcon }
                   ].map((step, idx) => (
                     <motion.div 
                       key={idx} 
@@ -580,10 +692,10 @@ export default function App() {
 
               <div>
                 <h3 className="text-lg font-semibold font-display text-forest">
-                  Scanning Thailand Local Map Records...
+                  {t.loadingSearchTitle}
                 </h3>
                 <p className="text-xs text-forest/70 mt-2 font-mono">
-                  Searching Google Maps for: <span className="text-timber font-bold">"{businessName}"</span>
+                  {t.lookingFor} <span className="text-timber font-bold">"{businessName}"</span>
                 </p>
               </div>
 
@@ -593,13 +705,13 @@ export default function App() {
 
               <div className="flex flex-col gap-2 w-full pt-4">
                 <p className="text-[10px] text-forest/60 font-mono italic">
-                  Grounded Search scans maps databases to extract precise address categories, target subdistricts, and primary customer profiles.
+                  {t.loadingSearchDesc}
                 </p>
                 <button 
                   onClick={() => setView("setup")}
                   className="text-xs text-timber hover:text-forest font-bold underline mt-2"
                 >
-                  Skip and enter details manually
+                  {t.skipToManual}
                 </button>
               </div>
             </div>
@@ -612,10 +724,10 @@ export default function App() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-forest/15 pb-6">
               <div>
                 <h2 className="text-2xl font-display font-semibold text-forest">
-                  Review & Refine Business Attributes
+                  {t.setupTitle}
                 </h2>
                 <p className="text-xs text-forest/70 mt-1">
-                  Adjust target local SEO parameters before executing the bilingual copywriter.
+                  {t.setupSubtitle}
                 </p>
               </div>
               <button 
@@ -623,19 +735,19 @@ export default function App() {
                 type="button"
                 className="text-xs font-semibold text-forest hover:bg-forest/10 border border-forest/20 rounded-lg px-3 py-1.5 transition-all self-start cursor-pointer"
               >
-                Back to Home
+                {t.backToHome}
               </button>
             </div>
 
             {error && (
               <div className="p-4 bg-terracotta/15 text-forest rounded-xl border border-terracotta/30 text-xs sm:text-sm flex flex-col gap-1 shadow-sm">
-                <span className="font-bold">Notice regarding lookup:</span>
+                <span className="font-bold">Map Search Notice:</span>
                 <span>{error}</span>
               </div>
             )}
 
             <form onSubmit={handleGenerate} className="grid grid-cols-1 md:grid-cols-12 gap-8">
-              {/* Left Column Form */}
+               {/* Left Column Form */}
               <motion.div 
                 initial={{ opacity: 0, x: -12 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -647,7 +759,7 @@ export default function App() {
                 <div>
                   <label className="block text-xs font-bold text-forest/70 uppercase tracking-wider mb-2 flex items-center gap-1.5 font-display">
                     <Building2 className="w-3.5 h-3.5 text-forest" />
-                    Business Name (or Category)
+                    {t.shopNameLabel}
                   </label>
                   <div className="flex gap-2">
                     <input 
@@ -655,7 +767,7 @@ export default function App() {
                       required
                       value={businessName}
                       onChange={(e) => setBusinessName(e.target.value)}
-                      placeholder="e.g. Starbucks Thonglor"
+                      placeholder={t.shopNamePlaceholder}
                       className="flex-1 p-3 text-sm bg-[#FAE8CC] border border-forest/18 rounded-xl focus:border-forest outline-none font-medium text-forest"
                     />
                     <button
@@ -664,7 +776,7 @@ export default function App() {
                       disabled={searching || !businessName}
                       className="bg-forest hover:bg-forest/90 text-[#FAE8CC] text-xs font-bold px-4 rounded-xl disabled:opacity-50 shrink-0 transition-colors cursor-pointer"
                     >
-                      {searching ? <Loader2 className="w-4 h-4 animate-spin" /> : "Re-Search Maps"}
+                      {searching ? <Loader2 className="w-4 h-4 animate-spin" /> : t.searchAgainButton}
                     </button>
                   </div>
                 </div>
@@ -674,20 +786,20 @@ export default function App() {
                   <label className="block text-xs font-bold text-forest/70 uppercase tracking-wider mb-1.5 flex items-center justify-between font-display">
                     <span className="flex items-center gap-1.5">
                       <TrendingUp className="w-3.5 h-3.5 text-forest" />
-                      Target Core Keyword
+                      {t.keywordLabel}
                     </span>
-                    <span className="text-[10px] text-forest/50 font-mono normal-case font-medium">Crucial for ranking</span>
+                    <span className="text-[10px] text-forest/50 font-mono normal-case font-medium">{t.keywordSubtitle}</span>
                   </label>
                   <input 
                     type="text"
                     required
                     value={coreKeyword}
                     onChange={(e) => setCoreKeyword(e.target.value)}
-                    placeholder="e.g. Italian Restaurant Thonglor"
+                    placeholder={t.keywordPlaceholder}
                     className="w-full p-3 text-sm bg-[#FAE8CC] border border-forest/18 rounded-xl focus:border-forest outline-none font-medium text-forest"
                   />
                   <p className="text-[10px] text-forest/50 mt-1.5">
-                    The core keyword is injected in front of the Thai string to establish high relevance in Google Local Packs.
+                    {t.keywordDesc}
                   </p>
                 </div>
 
@@ -696,7 +808,7 @@ export default function App() {
                   <label className="block text-xs font-bold text-forest/70 uppercase tracking-wider mb-2 flex items-center justify-between font-display">
                     <span className="flex items-center gap-1.5">
                       <MapPin className="w-3.5 h-3.5 text-forest" />
-                      Target Area & Province
+                      {t.locationLabel}
                     </span>
                   </label>
                   <input 
@@ -704,13 +816,13 @@ export default function App() {
                     required
                     value={district}
                     onChange={(e) => setDistrict(e.target.value)}
-                    placeholder="e.g. Nimman, Chiang Mai"
+                    placeholder={t.locationPlaceholder}
                     className="w-full p-3 text-sm bg-[#FAE8CC] border border-forest/18 rounded-xl focus:border-forest outline-none font-medium text-forest"
                   />
                   
                   {/* Suggestions block */}
                   <div className="mt-4">
-                    <p className="text-[10px] text-forest/60 font-bold uppercase tracking-wider mb-1.5">Quick Location presets:</p>
+                    <p className="text-[10px] text-forest/60 font-bold uppercase tracking-wider mb-1.5">{t.quickLocationsLabel}</p>
                     <div className="flex flex-wrap gap-1.5">
                       {suggestedAreas.map((area) => (
                         <button
@@ -745,27 +857,27 @@ export default function App() {
                   <label className="block text-xs font-bold text-forest/70 uppercase tracking-wider mb-2 flex items-center justify-between shrink-0 font-display">
                     <span className="flex items-center gap-1.5">
                       <Layers className="w-3.5 h-3.5 text-forest" />
-                      Core Services & Bullets
+                      {t.offersLabel}
                     </span>
-                    <span className="text-[10px] text-forest bg-[#FAE8CC] px-2 py-0.5 rounded border border-forest/12 font-mono font-bold">1 per line</span>
+                    <span className="text-[10px] text-forest bg-[#FAE8CC] px-2 py-0.5 rounded border border-forest/12 font-mono font-bold">{t.offersSubtitle}</span>
                   </label>
                   <textarea
                     required
                     value={bulletPoints}
                     onChange={(e) => setBulletPoints(e.target.value)}
-                    placeholder="- authentic neapolitan pizza&#10;- imported ingredients&#10;- cozy atmospheric seating&#10;- rooftop cocktails"
+                    placeholder={t.offersPlaceholder}
                     className="flex-1 w-full min-h-[180px] p-4 text-sm bg-[#FAE8CC] border border-forest/18 rounded-xl focus:border-forest outline-none resize-none text-forest font-medium leading-relaxed"
                   />
                   <div className="mt-4 border-t border-forest/12 pt-3 flex flex-col gap-2">
                     <div className="text-[11px] text-forest flex items-center gap-1.5 font-semibold">
                       <HelpCircle className="w-3.5 h-3.5 text-timber shrink-0" />
-                      <span>Click to inject recommended local features:</span>
+                      <span>{t.clickSuggestionsLabel}</span>
                     </div>
                     <div className="flex flex-wrap gap-1.5">
                       {suggestedFeatures.map((feat) => {
                         const lines = bulletPoints
-                          .split("\n")
-                          .map((l) => l.replace(/^-\s*/, "").trim().toLowerCase());
+                           .split("\n")
+                           .map((l) => l.replace(/^-\s*/, "").trim().toLowerCase());
                         const isSelected = lines.includes(feat.toLowerCase());
                         
                         return (
@@ -776,7 +888,7 @@ export default function App() {
                             className={`text-[10px] px-2.5 py-1 rounded-lg border transition-all flex items-center gap-1 cursor-pointer ${
                               isSelected
                                 ? "bg-[#CD966B]/20 text-forest border-timber font-bold"
-                                : "bg-[#FAE8CC] hover:bg-[#F1CFAE]/50 text-forest border-forest/15"
+                               : "bg-[#FAE8CC] hover:bg-[#F1CFAE]/50 text-forest border-forest/15"
                             }`}
                           >
                             <span>{isSelected ? "✓" : "+"}</span>
@@ -795,7 +907,7 @@ export default function App() {
                   className="w-full bg-forest hover:bg-forest/90 text-[#FAE8CC] py-4 px-6 rounded-xl font-bold text-sm tracking-wide uppercase transition-all shadow-sm hover:-translate-y-0.5 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
                 >
                   <Sparkles className="w-4 h-4 animate-pulse" />
-                  Generate Bilingual Copy
+                  {t.createDescriptionsButton}
                 </button>
               </motion.div>
             </form>
@@ -816,10 +928,10 @@ export default function App() {
 
               <div className="space-y-2">
                 <p className="text-xs uppercase font-mono font-bold tracking-widest text-terracotta animate-pulse">
-                  AI Optimizing Local Copy
+                  {t.generatingBadge}
                 </p>
                 <h3 className="text-xl font-bold font-display tracking-tight text-cream">
-                  Generating Bilingual SEO Variants
+                  {t.generatingTitle}
                 </h3>
               </div>
 
@@ -837,8 +949,8 @@ export default function App() {
                 </p>
               </div>
 
-              <p className="text-[10px] text-cream/60 max-w-xs font-mono leading-relaxed mt-4">
-                Our Gemini engine structures Polite Central Thai (using Ka/Krap), inserts the double break, translates to fluent English, and clamps characters under 750 total limit.
+              <p className="text-[10px] text-cream/60 max-w-xs leading-relaxed mt-4">
+                {t.generatingDesc}
               </p>
             </div>
           </div>
@@ -855,14 +967,14 @@ export default function App() {
                 <div className="flex items-center justify-between">
                   <label className="text-[11px] font-bold text-forest uppercase tracking-wider flex items-center gap-1.5 font-display">
                     <Building2 className="w-3.5 h-3.5" />
-                    SEO Parameters Editor
+                    {t.editShopInfoTitle}
                   </label>
                   <button 
                     onClick={handleReset}
                     type="button"
                     className="text-[10px] bg-forest text-[#FAE8CC] font-bold px-2 py-1 rounded border border-transparent hover:bg-forest/90 cursor-pointer"
                   >
-                    Start Over
+                    {t.startOver}
                   </button>
                 </div>
               </div>
@@ -871,7 +983,7 @@ export default function App() {
                 {/* Business Name */}
                 <div>
                   <label className="block text-[10px] font-bold text-forest/70 uppercase tracking-wider mb-1 font-display">
-                    Business Name
+                    {t.shopNameLabel}
                   </label>
                   <input
                     type="text"
@@ -884,7 +996,7 @@ export default function App() {
                 {/* Core Services Bullet Points */}
                 <div>
                   <label className="block text-[10px] font-bold text-forest/70 uppercase tracking-wider mb-1 font-display">
-                    Services / Bullets
+                    {t.offersLabel}
                   </label>
                   <textarea
                     required
@@ -893,7 +1005,7 @@ export default function App() {
                     className="w-full h-32 p-3 text-xs bg-[#FAE8CC] border border-forest/15 rounded-lg focus:border-forest resize-none font-medium text-forest"
                   />
                   <div className="mt-2 flex flex-col gap-1.5">
-                    <span className="text-[9px] text-forest/50 font-bold uppercase tracking-wider font-display">Quick Suggestions:</span>
+                    <span className="text-[9px] text-forest/50 font-bold uppercase tracking-wider font-display">{t.clickSuggestionsLabel}</span>
                     <div className="flex flex-wrap gap-1">
                       {suggestedFeatures.slice(0, 6).map((feat) => {
                         const lines = bulletPoints
@@ -922,7 +1034,7 @@ export default function App() {
                 {/* Target Core Keyword */}
                 <div>
                   <label className="block text-[10px] font-bold text-forest/70 uppercase tracking-wider mb-1 font-display">
-                    Core Keyword
+                    {t.keywordLabel}
                   </label>
                   <input
                     required
@@ -936,7 +1048,7 @@ export default function App() {
                 {/* Target District */}
                 <div>
                   <label className="block text-[10px] font-bold text-forest/70 uppercase tracking-wider mb-1 font-display">
-                    District / Region
+                    {t.locationLabel}
                   </label>
                   <input
                     required
@@ -954,7 +1066,7 @@ export default function App() {
                   className="mt-auto w-full bg-forest hover:bg-forest/90 text-[#FAE8CC] text-xs py-3 rounded-lg font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
-                  Re-Optimize Copy
+                  {t.rewriteDescriptionsButton}
                 </button>
               </form>
             </aside>
@@ -975,12 +1087,12 @@ export default function App() {
                           : "border-transparent text-forest/40 hover:text-forest/70"
                       }`}
                     >
-                      Variation 0{idx + 1}
+                      {t.optionLabel} {idx + 1}
                     </button>
                   ))}
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="hidden sm:inline text-[11px] font-mono text-forest/60">Target Area:</span>
+                  <span className="hidden sm:inline text-[11px] font-mono text-forest/60">{t.shopAreaLabel}</span>
                   <span className="text-[11px] font-mono bg-[#FFF1CE] text-forest px-2 py-0.5 rounded-lg border border-forest/12 font-bold">{district}</span>
                 </div>
               </div>
@@ -996,17 +1108,17 @@ export default function App() {
                     {isEditing ? (
                       <>
                         <Eye className="w-3.5 h-3.5 text-forest" />
-                        Preview Draft
+                        {t.previewTextButton}
                       </>
                     ) : (
                       <>
                         <RefreshCw className="w-3.5 h-3.5 text-timber" />
-                        Direct Edit
+                        {t.directEditButton}
                       </>
                     )}
                   </button>
                   <span className="text-[10px] font-mono bg-[#FFF1CE] text-forest/80 px-2 py-1.5 rounded-lg border border-forest/15">
-                    {isEditing ? "Editable Mode" : "Ready"}
+                    {isEditing ? t.editingModeLabel : t.readyLabel}
                   </span>
                 </div>
                 
@@ -1016,7 +1128,7 @@ export default function App() {
                     value={currentVariation}
                     onChange={(e) => handleTextChange(e.target.value)}
                     className="flex-1 w-full p-6 sm:p-8 pt-16 font-mono text-xs sm:text-sm leading-relaxed text-forest bg-[#FAE8CC] outline-none resize-none border-0 min-h-[250px] focus:bg-[#FFF1CE]/30"
-                    placeholder="Refine or customize your copy here directly to fit the character limits..."
+                    placeholder="Make changes to your description here directly to fit the limits..."
                   />
                 ) : (
                   <div className="flex-1 p-6 sm:p-8 pt-16 font-sans text-sm sm:text-base leading-relaxed text-charcoal overflow-y-auto whitespace-pre-wrap selection:bg-[#F1CFAE]/60">
@@ -1051,10 +1163,10 @@ export default function App() {
                       >
                         <p className="text-[11px] font-semibold flex items-center gap-1.5 leading-none">
                           <span className="text-sm">⚠️</span>
-                          <span>Character limit exceeded ({totalOutputLength} / 750). Google Business Profile may reject this bio. Please shorten it in Direct Edit mode.</span>
+                          <span>{t.warningTooLong.replace("{count}", String(totalOutputLength))}</span>
                         </p>
                         <span className="text-[9px] font-bold uppercase bg-[#CD966B]/20 text-forest px-2 py-0.5 rounded font-mono">
-                          Too Long
+                          {t.warningTooLongBadge}
                         </span>
                       </motion.div>
                     )}
@@ -1067,10 +1179,10 @@ export default function App() {
                       >
                         <p className="text-[11px] font-semibold flex items-center gap-1.5 leading-none">
                           <span className="text-sm">⚡</span>
-                          <span>Approaching limit ({totalOutputLength} / 750). Tap 'Direct Edit' to prune text for absolute safety.</span>
+                          <span>{t.warningAlmostFull.replace("{count}", String(totalOutputLength))}</span>
                         </p>
                         <span className="text-[9px] font-bold uppercase bg-[#FFF1CE] text-forest px-2 py-0.5 rounded font-mono border border-forest/12 animate-pulse">
-                          Approaching Limit
+                          {t.warningAlmostFullBadge}
                         </span>
                       </motion.div>
                     )}
@@ -1084,11 +1196,11 @@ export default function App() {
                   <div className="flex flex-wrap gap-4 items-center">
                     <div className="flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full bg-forest"></span>
-                      <span className="text-[11px] font-mono text-forest/70">Thai Segment: <strong className="text-forest font-semibold">{thaiLength}</strong> chars</span>
+                      <span className="text-[11px] font-mono text-forest/70">{t.thaiTextLabel} <strong className="text-forest font-semibold">{thaiLength}</strong></span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full bg-timber"></span>
-                      <span className="text-[11px] font-mono text-forest/70">English Segment: <strong className="text-forest font-semibold">{englishLength}</strong> chars</span>
+                      <span className="text-[11px] font-mono text-forest/70">{t.englishTextLabel} <strong className="text-forest font-semibold">{englishLength}</strong></span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <span className={`w-2 h-2 rounded-full ${
@@ -1105,7 +1217,7 @@ export default function App() {
                             ? "text-timber font-semibold" 
                             : "text-forest"
                       }`}>
-                        Total: <strong>{totalOutputLength}</strong> / 750 chars
+                        {t.totalLettersLabel} <strong>{totalOutputLength}</strong> / 750
                       </span>
                     </div>
                   </div>
@@ -1124,12 +1236,12 @@ export default function App() {
                     {copied ? (
                       <>
                         <Check className="w-3.5 h-3.5 text-[#FAE8CC]" />
-                        Copied!
+                        {t.copiedToastTitle}
                       </>
                     ) : (
                       <>
                         <Copy className="w-3.5 h-3.5 text-[#FAE8CC]/80" />
-                        {totalOutputLength > 750 ? "Copy anyway (Over limit)" : "Copy Optimization String"}
+                        {totalOutputLength > 750 ? t.copyAnywayButton : t.copyDescriptionButton}
                       </>
                     )}
                   </button>
@@ -1142,15 +1254,15 @@ export default function App() {
                   <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="max-w-2xl">
                       <h4 className="text-sm font-bold text-forest flex items-center gap-1.5 font-display">
-                        <span className="text-base">🇹🇭</span> GMF / GBP Search Strategy Note
+                        <span className="text-base">🇹🇭</span> {t.howGmapsWorksTitle}
                       </h4>
                       <p className="text-xs text-charcoal/90 mt-1.5 leading-relaxed">
-                        Google operates separate indexes for Thai and English queries. This custom hybrid layout prioritizes Local Thai SEO first, followed by exactly <span className="font-bold font-mono">two vertical breaks</span> to trigger Google's clean <span className="underline font-semibold text-forest font-display">"Read more"</span> expansion button precisely above your English translation.
+                        {t.howGmapsWorksDesc}
                       </p>
                     </div>
                     <div className="shrink-0">
                       <button className="text-[10px] bg-forest hover:bg-forest/90 text-[#FAE8CC] font-bold py-2.5 px-4 rounded-lg uppercase tracking-wider shadow-sm transition-colors whitespace-nowrap">
-                        Join SEO Masterclass
+                        {t.learnMoreButton}
                       </button>
                     </div>
                   </div>
@@ -1177,8 +1289,8 @@ export default function App() {
               <Check className="w-4 h-4 text-forest" />
             </div>
             <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-[#FAE8CC] font-display">Copied String!</p>
-              <p className="text-[11px] text-[#FAE8CC]/80 mt-0.5">Ready to paste directly into Google Business Profile.</p>
+              <p className="text-xs font-bold uppercase tracking-wider text-[#FAE8CC] font-display">{t.copiedToastTitle}</p>
+              <p className="text-[11px] text-[#FAE8CC]/80 mt-0.5">{t.copiedToastSubtitle}</p>
             </div>
           </motion.div>
         )}

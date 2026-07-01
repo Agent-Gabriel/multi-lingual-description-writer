@@ -1,6 +1,6 @@
 {
-  "name": "Bilingual GBP Copywriter",
-  "description": "Generate optimized, bilingual Thai-English Google Business Profile copy tailored to Bangkok districts.",
+  "name": "Bilingual Map Description Maker",
+  "description": "Create simple Thai and English descriptions for shops on Google Maps.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

@@ -124,7 +124,7 @@ Return a structured JSON object containing:
       console.error("Search error:", error);
       const isQuota = error.message && (error.message.includes("429") || error.message.includes("RESOURCE_EXHAUSTED") || error.message.includes("quota"));
       const errMsg = isQuota 
-        ? "Gemini API rate limit exceeded. Since grounding utilizes live Google Maps and Search, requests are highly rate-limited on the free tier. Please wait a minute or input your business details manually."
+        ? "We have reached our search limit. Please wait a minute or type your shop details yourself."
         : (error.message || "Failed to find business info");
       res.status(500).json({ error: errMsg });
     }
@@ -198,7 +198,7 @@ IMPORTANT: EACH string MUST be mathematically STRICTLY UNDER 750 characters tota
       console.error("Generation error:", error);
       const isQuota = error.message && (error.message.includes("429") || error.message.includes("RESOURCE_EXHAUSTED") || error.message.includes("quota"));
       const errMsg = isQuota 
-        ? "Gemini API rate limit exceeded. Since grounding utilizes live Google Maps and Search, requests are highly rate-limited on the free tier. Please wait a minute before generating again."
+        ? "We have reached our limit. Please wait a minute before creating descriptions again."
         : (error.message || "Failed to generate copy");
       res.status(500).json({ error: errMsg });
     }
