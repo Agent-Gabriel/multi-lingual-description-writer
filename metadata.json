@@ -1,0 +1,6 @@
+{
+  "name": "Bilingual GBP Copywriter",
+  "description": "Generate optimized, bilingual Thai-English Google Business Profile copy tailored to Bangkok districts.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
