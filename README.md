@@ -1,3 +1,6 @@
+<img width="1376" height="768" alt="thailand_local_seo_hero_1782895916184" src="https://github.com/user-attachments/assets/ae14b73f-7ef4-43fa-845c-48cd4019f6cf" />
+
+
 # 🗺️ Bilingual Map Description Maker (เครื่องมือช่วยเขียนคำอธิบายหมุดร้านค้าสองภาษา)
 
 Welcome to the **Bilingual Map Description Maker**! This is a free, user-friendly, and open-source tool designed specifically to help small business owners (especially in Thailand and across Southeast Asia) craft perfectly optimized, dual-language (Thai & English) descriptions for their Google Business Profile / Google Maps listings.
