@@ -34,6 +34,8 @@ import beachIcon from "./assets/icons/Beach.png";
 // @ts-ignore
 import heroVideo from "./assets/Video Ready After Peaceful Scene - Google Gemini.mp4";
 // @ts-ignore
+import thaiHeroVideo from "./THAI_Video Ready After Peaceful Scene - Google Gemini_2.mp4";
+// @ts-ignore
 import loopVideo from "./LOOP_Video Ready After Peaceful Scene - Google Gemini.mp4";
 import { translations, Language } from "./translations";
 
@@ -928,7 +930,11 @@ export default function App() {
                     }}
                   >
                     <video
-                      src={heroVideo || "/src/assets/Video Ready After Peaceful Scene - Google Gemini.mp4"}
+                      src={
+                        lang === "th"
+                          ? thaiHeroVideo || "/src/THAI_Video Ready After Peaceful Scene - Google Gemini_2.mp4"
+                          : heroVideo || "/src/assets/Video Ready After Peaceful Scene - Google Gemini.mp4"
+                      }
                       autoPlay
                       loop
                       muted={isVideoMuted}
