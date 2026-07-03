@@ -1688,6 +1688,31 @@ export default function App() {
             <span>Local SEO Project</span>
           </div>
         </div>
+
+        {/* Support Vote & Buy Me a Coffee block */}
+        <div className="max-w-7xl mx-auto mt-6 pt-6 border-t border-forest/10 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex flex-col gap-1 text-center md:text-left max-w-2xl">
+            <div className="flex items-center gap-2 justify-center md:justify-start text-xs font-bold text-timber font-mono">
+              <span>Status: Weekend Project (Temporary) ⏳</span>
+            </div>
+            <p className="text-xs text-forest/70 leading-relaxed">
+              {lang === "en" 
+                ? "Want to keep this tool alive permanently? Think of a coffee as a vote. If there's enough interest, I'll keep maintaining it."
+                : "ต้องการให้เครื่องมือนี้เปิดใช้งานตลอดไปไหม? การเลี้ยงกาแฟเปรียบเสมือนการลงคะแนน หากได้รับความสนใจเพียงพอ เราจะพัฒนาและดูแลรักษาระบบนี้ต่อไป"}
+            </p>
+          </div>
+          <a 
+            href="https://buymeacoffee.com/craigtburton" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2.5 bg-[#FFF1CE] hover:bg-forest text-forest hover:text-[#FAE8CC] hover:border-transparent font-sans font-bold text-xs py-2.5 px-5 rounded-xl border border-forest/20 shadow-xs transition-all active:scale-98 shrink-0 cursor-pointer"
+          >
+            <span className="text-sm">☕</span>
+            <span>
+              {lang === "en" ? "Vote to Keep It Alive (Buy Me a Coffee)" : "ร่วมลงคะแนนเพื่อไปต่อ (เลี้ยงกาแฟฉัน)"}
+            </span>
+          </a>
+        </div>
       </footer>
 
       {/* Floating Go to Top Button for mobile and desktop */}
