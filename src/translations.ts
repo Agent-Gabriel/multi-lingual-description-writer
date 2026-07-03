@@ -48,6 +48,7 @@ export interface TranslationSchema {
   lookingFor: string;
   loadingSearchDesc: string;
   skipToManual: string;
+  stopSearchAndReturnHome: string;
 
   // View 3 & 5: Setup & Edit Dashboard
   setupTitle: string;
@@ -158,6 +159,7 @@ export const translations: Record<Language, TranslationSchema> = {
     lookingFor: "Looking for:",
     loadingSearchDesc: "We search the web to find your shop's address and details so we can write the best description for you.",
     skipToManual: "Skip and type details myself",
+    stopSearchAndReturnHome: "Stop search & return home",
 
     setupTitle: "Check and Edit Shop Details",
     setupSubtitle: "Make any changes to your shop's info before we write the descriptions.",
@@ -279,6 +281,7 @@ export const translations: Record<Language, TranslationSchema> = {
     lookingFor: "กำลังค้นหา:",
     loadingSearchDesc: "เรากำลังค้นหาที่อยู่และรายละเอียดของร้านค้าบนเว็บ เพื่อให้ได้ข้อมูลอ้างอิงสำหรับการเขียนคำอธิบายที่ดีที่สุด",
     skipToManual: "ข้ามแล้วพิมพ์รายละเอียดด้วยตนเอง",
+    stopSearchAndReturnHome: "หยุดค้นหาและกลับหน้าหลัก",
 
     setupTitle: "ตรวจสอบและปรับแต่งรายละเอียดร้านค้า",
     setupSubtitle: "คุณสามารถแก้ไขข้อมูลรายละเอียดของร้านก่อนที่เราจะเริ่มเขียนคำอธิบายได้ตามต้องการ",

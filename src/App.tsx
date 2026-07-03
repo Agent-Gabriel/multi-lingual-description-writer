@@ -16,7 +16,9 @@ import {
   HelpCircle,
   TrendingUp,
   Maximize2,
-  FileDown
+  FileDown,
+  Volume2,
+  VolumeX
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { jsPDF } from "jspdf";
@@ -29,6 +31,10 @@ import shopIcon from "./assets/icons/shop.png";
 import puzzleSolvingIcon from "./assets/icons/Puzzle Solving.png";
 import thailandIcon from "./assets/icons/Thailand.png";
 import beachIcon from "./assets/icons/Beach.png";
+// @ts-ignore
+import heroVideo from "./assets/Video Ready After Peaceful Scene - Google Gemini.mp4";
+// @ts-ignore
+import loopVideo from "./LOOP_Video Ready After Peaceful Scene - Google Gemini.mp4";
 import { translations, Language } from "./translations";
 
 type ViewState = "landing" | "loading_search" | "setup" | "loading_generate" | "output";
@@ -96,6 +102,7 @@ export default function App() {
 
   // Interactive star clicking states
   const [starCount, setStarCount] = useState(0);
+  const [isVideoMuted, setIsVideoMuted] = useState(false);
   const [particles, setParticles] = useState<{ id: number; x: number; y: number; targetX: number; targetY: number; scale: number; rotate: number; emoji: string }[]>([]);
   const [explodedMessage, setExplodedMessage] = useState(false);
 
@@ -670,10 +677,12 @@ export default function App() {
                   className="relative max-w-md w-full aspect-[4/3] rounded-2xl overflow-hidden border border-forest/18 bg-[#FFF1CE] p-3 shadow-sm"
                 >
                   <div className="w-full h-full rounded-xl overflow-hidden relative group">
-                    <img 
-                      src="/src/assets/images/thailand_local_seo_hero_1782895916184.jpg" 
-                      alt={t.heroImageAlt} 
-                      referrerPolicy="no-referrer"
+                    <video
+                      src={loopVideo || "/src/LOOP_Video Ready After Peaceful Scene - Google Gemini.mp4"}
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-forest/70 via-transparent to-transparent flex flex-col justify-end p-5">
@@ -834,41 +843,121 @@ export default function App() {
 
         {/* VIEW 2: LOADING SEARCH VIEW */}
         {view === "loading_search" && (
-          <div className="flex-1 flex flex-col items-center justify-center p-8 min-h-[400px]">
-            <div className="flex flex-col items-center max-w-md text-center gap-6">
-              {/* Radar pulse */}
-              <div className="relative w-24 h-24">
-                <div className="absolute inset-0 bg-forest/10 rounded-full animate-ping"></div>
-                <div className="absolute inset-2 bg-timber/15 rounded-full animate-pulse"></div>
-                <div className="absolute inset-6 bg-forest rounded-full flex items-center justify-center border border-forest/10">
-                  <Building2 className="text-[#FAE8CC] w-8 h-8 animate-bounce" />
+          <div 
+            className="flex-1 flex flex-col relative overflow-hidden justify-center min-h-[500px]"
+            style={{
+              backgroundImage: `linear-gradient(185deg, rgba(250, 232, 204, 0.9) 0%, rgba(250, 232, 204, 0.75) 50%, rgba(250, 232, 204, 0.94) 100%), url('/src/assets/images/thailand_local_seo_hero_1782895916184.jpg')`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            }}
+          >
+            <div className="max-w-7xl mx-auto px-6 sm:px-10 py-12 md:py-16 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center w-full">
+              
+              {/* Left Column: Progress & Actions */}
+              <motion.div 
+                initial={{ opacity: 0, x: -30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
+                className="lg:col-span-6 flex flex-col gap-6 bg-[#FFF1CE]/95 backdrop-blur-md p-8 rounded-2xl border border-forest/18 shadow-md"
+              >
+                {/* Radar pulse */}
+                <div className="flex items-center gap-4">
+                  <div className="relative w-16 h-16 shrink-0">
+                    <div className="absolute inset-0 bg-forest/10 rounded-full animate-ping"></div>
+                    <div className="absolute inset-1.5 bg-timber/15 rounded-full animate-pulse"></div>
+                    <div className="absolute inset-4.5 bg-forest rounded-full flex items-center justify-center border border-forest/10">
+                      <Building2 className="text-[#FAE8CC] w-5 h-5 animate-bounce" />
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold font-display text-forest">
+                      {t.loadingSearchTitle}
+                    </h3>
+                    <p className="text-xs text-forest/70 mt-0.5 font-mono">
+                      {t.lookingFor} <span className="text-timber font-bold">"{businessName}"</span>
+                    </p>
+                  </div>
                 </div>
-              </div>
 
-              <div>
-                <h3 className="text-lg font-semibold font-display text-forest">
-                  {t.loadingSearchTitle}
-                </h3>
-                <p className="text-xs text-forest/70 mt-2 font-mono">
-                  {t.lookingFor} <span className="text-timber font-bold">"{businessName}"</span>
-                </p>
-              </div>
+                <div className="w-full bg-[#F1CFAE]/40 h-2 rounded-lg overflow-hidden border border-forest/10 relative">
+                  <div className="bg-gradient-to-r from-forest to-timber h-full w-2/3 rounded-lg animate-pulse"></div>
+                </div>
 
-              <div className="w-full bg-[#F1CFAE] h-1.5 rounded-lg overflow-hidden border border-forest/10">
-                <div className="bg-forest h-full w-2/3 rounded-lg animate-pulse"></div>
-              </div>
-
-              <div className="flex flex-col gap-2 w-full pt-4">
-                <p className="text-[10px] text-forest/60 font-mono italic">
+                <p className="text-xs text-forest/80 leading-relaxed font-mono bg-forest/5 p-3 rounded-lg border border-forest/10">
                   {t.loadingSearchDesc}
                 </p>
-                <button 
-                  onClick={() => setView("setup")}
-                  className="text-xs text-timber hover:text-forest font-bold underline mt-2"
+
+                {/* UX IMPROVEMENT: Stop search and return home, and skip and enter */}
+                <div className="flex flex-col sm:flex-row items-center gap-3 w-full pt-2">
+                  <button 
+                    type="button"
+                    onClick={() => setView("setup")}
+                    className="w-full sm:w-auto flex-1 bg-forest hover:bg-forest/90 text-[#FAE8CC] text-xs font-bold py-3 px-4 rounded-xl shadow-xs transition-all cursor-pointer flex items-center justify-center gap-2 border border-forest/10 active:scale-98"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    {t.skipToManual}
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={handleReset}
+                    className="w-full sm:w-auto flex-1 bg-[#FAE8CC] hover:bg-[#FAE8CC]/80 text-timber hover:text-forest text-xs font-bold py-3 px-4 rounded-xl border border-timber/25 transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-98"
+                  >
+                    {t.stopSearchAndReturnHome}
+                  </button>
+                </div>
+              </motion.div>
+
+              {/* Right Column: Immersive Video with Zoom Effect */}
+              <div className="lg:col-span-6 flex justify-center w-full">
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.75, rotate: -1 }}
+                  animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                  transition={{ 
+                    duration: 0.9, 
+                    ease: [0.16, 1, 0.3, 1]
+                  }}
+                  className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden border-2 border-forest/25 bg-black p-1 shadow-lg group"
                 >
-                  {t.skipToManual}
-                </button>
+                  <motion.div 
+                    className="w-full h-full rounded-xl overflow-hidden relative"
+                    animate={{ scale: [1, 1.05, 1] }}
+                    transition={{ 
+                      duration: 20, 
+                      repeat: Infinity, 
+                      ease: "easeInOut" 
+                    }}
+                  >
+                    <video
+                      src={heroVideo || "/src/assets/Video Ready After Peaceful Scene - Google Gemini.mp4"}
+                      autoPlay
+                      loop
+                      muted={isVideoMuted}
+                      playsInline
+                      className="w-full h-full object-cover"
+                    />
+                    {/* Audio Mute/Unmute Toggle Button */}
+                    <button
+                      type="button"
+                      onClick={() => setIsVideoMuted(!isVideoMuted)}
+                      className="absolute top-4 right-4 bg-black/60 hover:bg-black/80 backdrop-blur-md text-white border border-white/20 p-2.5 rounded-full shadow-lg transition-all active:scale-95 cursor-pointer z-20 flex items-center justify-center"
+                      title={isVideoMuted ? "Unmute sound" : "Mute sound"}
+                    >
+                      {isVideoMuted ? (
+                        <VolumeX className="w-4 h-4 text-rose-300" />
+                      ) : (
+                        <Volume2 className="w-4 h-4 text-[#FFF1CE] animate-pulse" />
+                      )}
+                    </button>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent flex flex-col justify-end p-4 pointer-events-none">
+                      <p className="text-[10px] font-mono text-white/80 uppercase tracking-wider flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        {t.realtimeSearch}
+                      </p>
+                    </div>
+                  </motion.div>
+                </motion.div>
               </div>
+
             </div>
           </div>
         )}
