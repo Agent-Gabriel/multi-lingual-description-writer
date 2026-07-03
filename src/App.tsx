@@ -18,7 +18,8 @@ import {
   Maximize2,
   FileDown,
   Volume2,
-  VolumeX
+  VolumeX,
+  ArrowUp
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { jsPDF } from "jspdf";
@@ -107,6 +108,23 @@ export default function App() {
   const [isVideoMuted, setIsVideoMuted] = useState(false);
   const [particles, setParticles] = useState<{ id: number; x: number; y: number; targetX: number; targetY: number; scale: number; rotate: number; emoji: string }[]>([]);
   const [explodedMessage, setExplodedMessage] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 300) {
+        setShowScrollTop(true);
+      } else {
+        setShowScrollTop(false);
+      }
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   useEffect(() => {
     if (particles.length > 0) {
@@ -488,9 +506,9 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#FAE8CC] paper-grain font-sans text-charcoal flex flex-col relative">
       {/* Premium Navigation Header */}
-      <header className="h-16 border-b border-forest/18 bg-[#FAE8CC] flex items-center justify-between px-6 sm:px-10 shrink-0 z-10">
-        <div className="flex items-center gap-3 cursor-pointer">
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center overflow-hidden border border-forest/20 shadow-sm" onClick={handleReset}>
+      <header className="min-h-16 h-auto py-3.5 sm:py-0 sm:h-16 border-b border-forest/18 bg-[#FAE8CC] flex flex-col sm:flex-row items-center justify-between px-4 sm:px-10 gap-3 sm:gap-0 shrink-0 z-10">
+        <div className="flex items-center gap-3 cursor-pointer w-full sm:w-auto justify-center sm:justify-start">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center overflow-hidden border border-forest/20 shadow-sm shrink-0" onClick={handleReset}>
             <img 
               src={rankInMapsSpinning} 
               alt={t.appTitle} 
@@ -498,13 +516,13 @@ export default function App() {
               className="w-full h-full object-contain"
             />
           </div>
-          <div>
-            <h1 className="text-sm sm:text-base font-display font-semibold tracking-tight text-forest flex flex-row items-center gap-2">
-              <span onClick={handleReset} className="cursor-pointer hover:opacity-85">{t.appTitle}</span> 
+          <div className="flex flex-col">
+            <h1 className="text-sm sm:text-base font-display font-semibold tracking-tight text-forest flex flex-col xs:flex-row xs:items-center gap-1.5 xs:gap-2">
+              <span onClick={handleReset} className="cursor-pointer hover:opacity-85 text-center xs:text-left leading-tight">{t.appTitle}</span> 
               <button
                 type="button"
                 onClick={handleStarClick}
-                className="relative inline-flex items-center gap-1.5 text-[10px] text-cream bg-forest hover:bg-forest/90 px-2.5 py-1 rounded-full border border-forest/12 font-semibold transition-all cursor-pointer select-none active:scale-95 shadow-xs shrink-0"
+                className="relative inline-flex items-center justify-center gap-1.5 text-[9px] sm:text-[10px] text-cream bg-forest hover:bg-forest/90 px-2.5 py-0.5 sm:py-1 rounded-full border border-forest/12 font-semibold transition-all cursor-pointer select-none active:scale-95 shadow-xs shrink-0 self-center xs:self-auto"
                 title="Click me for a star burst!"
               >
                 <span>{t.appSubtitle}</span>
@@ -541,7 +559,7 @@ export default function App() {
             </h1>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 justify-center sm:justify-end w-full sm:w-auto">
           {/* Flag language toggle switch */}
           <div className="bg-[#FFF1CE] border border-forest/20 rounded-lg p-1 flex items-center gap-1 shadow-sm shrink-0">
             <button
@@ -1671,6 +1689,25 @@ export default function App() {
           </div>
         </div>
       </footer>
+
+      {/* Floating Go to Top Button for mobile and desktop */}
+      <AnimatePresence>
+        {showScrollTop && (
+          <motion.button
+            key="scroll-to-top"
+            initial={{ opacity: 0, scale: 0.8, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 20 }}
+            transition={{ duration: 0.2 }}
+            onClick={scrollToTop}
+            className="fixed bottom-24 right-6 z-40 bg-forest hover:bg-forest/90 text-[#FAE8CC] px-4 py-3 rounded-full shadow-lg border border-[#FFF1CE]/20 flex items-center gap-2 cursor-pointer active:scale-95 transition-all font-sans font-bold text-xs"
+            title={t.goToTop}
+          >
+            <ArrowUp className="w-4 h-4 text-[#FAE8CC] animate-bounce" />
+            <span className="inline">{t.goToTop}</span>
+          </motion.button>
+        )}
+      </AnimatePresence>
 
       {/* Elegant Toast Alert */}
       <AnimatePresence>

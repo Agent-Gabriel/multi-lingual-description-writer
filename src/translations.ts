@@ -8,6 +8,7 @@ export interface TranslationSchema {
   newSearch: string;
   startOver: string;
   backToHome: string;
+  goToTop: string;
 
   // View 1: Landing Page
   heroBadge: string;
@@ -123,6 +124,7 @@ export const translations: Record<Language, TranslationSchema> = {
     newSearch: "New Search",
     startOver: "Start Over",
     backToHome: "Back to Home",
+    goToTop: "Go to top",
 
     heroBadge: "Thai-English Maps Description Writer",
     heroTitle1: "Write Shop Descriptions in ",
@@ -245,6 +247,7 @@ export const translations: Record<Language, TranslationSchema> = {
     newSearch: "ค้นหาใหม่",
     startOver: "เริ่มต้นใหม่",
     backToHome: "กลับหน้าหลัก",
+    goToTop: "เลื่อนกลับไปด้านบน",
 
     heroBadge: "เครื่องมือเขียนคำอธิบายแผนที่ไทย-อังกฤษ",
     heroTitle1: "เขียนคำอธิบายร้านค้าใน ",
