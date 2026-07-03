@@ -94,6 +94,62 @@ export default function App() {
   const [copied, setCopied] = useState(false);
   const [exportingPdf, setExportingPdf] = useState(false);
 
+  // Interactive star clicking states
+  const [starCount, setStarCount] = useState(0);
+  const [particles, setParticles] = useState<{ id: number; x: number; y: number; targetX: number; targetY: number; scale: number; rotate: number; emoji: string }[]>([]);
+  const [explodedMessage, setExplodedMessage] = useState(false);
+
+  useEffect(() => {
+    if (particles.length > 0) {
+      const timer = setTimeout(() => {
+        setParticles([]);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [particles]);
+
+  const handleStarClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    
+    const isExplodingClick = starCount === 4;
+    const nextCount = isExplodingClick ? 5 : (starCount === 5 ? 1 : starCount + 1);
+
+    // Create custom particle bursts
+    const numParticles = isExplodingClick ? 55 : 8;
+    const newParticles = Array.from({ length: numParticles }).map((_, i) => {
+      const angle = Math.random() * Math.PI * 2;
+      const distance = isExplodingClick ? (60 + Math.random() * 160) : (25 + Math.random() * 60);
+      const id = Date.now() + Math.random() + i;
+      const emojis = ["⭐", "✨", "🌟", "🎉", "🇹🇭", "💖", "🍕", "☕", "🍀", "🚀", "🗺️", "🎈"];
+      const emoji = isExplodingClick 
+        ? emojis[Math.floor(Math.random() * emojis.length)]
+        : (Math.random() > 0.35 ? "⭐" : "✨");
+        
+      return {
+        id,
+        x: Math.random() * 30 - 15,
+        y: Math.random() * 12 - 6,
+        targetX: Math.cos(angle) * distance,
+        targetY: Math.sin(angle) * distance - (isExplodingClick ? 45 : 12),
+        scale: 0.6 + Math.random() * 1.3,
+        rotate: Math.random() * 360,
+        emoji,
+      };
+    });
+
+    setStarCount(nextCount);
+    setParticles((prev) => [...prev, ...newParticles].slice(-120));
+
+    if (isExplodingClick) {
+      setCopied(false); // clear copy toast to avoid overlap
+      setExplodedMessage(true);
+      setTimeout(() => {
+        setExplodedMessage(false);
+        setStarCount(0);
+      }, 3500);
+    }
+  };
+
   // Load generation count on mount
   useEffect(() => {
     const saved = localStorage.getItem("gmaps_generation_count");
@@ -424,8 +480,8 @@ export default function App() {
     <div className="min-h-screen bg-[#FAE8CC] paper-grain font-sans text-charcoal flex flex-col relative">
       {/* Premium Navigation Header */}
       <header className="h-16 border-b border-forest/18 bg-[#FAE8CC] flex items-center justify-between px-6 sm:px-10 shrink-0 z-10">
-        <div className="flex items-center gap-3 cursor-pointer" onClick={handleReset}>
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center overflow-hidden border border-forest/20 shadow-sm">
+        <div className="flex items-center gap-3 cursor-pointer">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center overflow-hidden border border-forest/20 shadow-sm" onClick={handleReset}>
             <img 
               src={rankInMapsSpinning} 
               alt={t.appTitle} 
@@ -434,8 +490,45 @@ export default function App() {
             />
           </div>
           <div>
-            <h1 className="text-sm sm:text-base font-display font-semibold tracking-tight text-forest flex items-center gap-2">
-              {t.appTitle} <span className="text-[10px] text-forest bg-[#FFF1CE] px-2.5 py-1 rounded-lg border border-forest/12 font-mono font-semibold">{t.appSubtitle}</span>
+            <h1 className="text-sm sm:text-base font-display font-semibold tracking-tight text-forest flex flex-row items-center gap-2">
+              <span onClick={handleReset} className="cursor-pointer hover:opacity-85">{t.appTitle}</span> 
+              <button
+                type="button"
+                onClick={handleStarClick}
+                className="relative inline-flex items-center gap-1.5 text-[10px] text-cream bg-forest hover:bg-forest/90 px-2.5 py-1 rounded-full border border-forest/12 font-semibold transition-all cursor-pointer select-none active:scale-95 shadow-xs shrink-0"
+                title="Click me for a star burst!"
+              >
+                <span>{t.appSubtitle}</span>
+                <span className="flex items-center gap-0.5 bg-[#FFF1CE]/25 px-1.5 py-0.5 rounded-full text-amber-300">
+                  {"⭐".repeat(starCount === 5 ? 5 : starCount) || "☆"}
+                  {starCount > 0 && starCount < 5 && <span className="text-[9px] text-[#FAE8CC]/90 ml-0.5">({starCount}/5)</span>}
+                  {starCount === 5 && <span className="text-[9px] text-amber-300 ml-0.5 font-bold animate-pulse">BOOM!</span>}
+                </span>
+
+                {/* Particle Emitter */}
+                <div className="absolute inset-0 pointer-events-none overflow-visible">
+                  {particles.map((p) => (
+                    <motion.div
+                      key={p.id}
+                      initial={{ opacity: 1, x: p.x, y: p.y, scale: 0.3, rotate: 0 }}
+                      animate={{
+                        opacity: 0,
+                        x: p.targetX,
+                        y: p.targetY,
+                        scale: p.scale,
+                        rotate: p.rotate,
+                      }}
+                      transition={{
+                        duration: starCount === 5 ? 1.4 : 0.8,
+                        ease: "easeOut",
+                      }}
+                      className="absolute text-sm select-none"
+                    >
+                      {p.emoji}
+                    </motion.div>
+                  ))}
+                </div>
+              </button>
             </h1>
           </div>
         </div>
@@ -1425,6 +1518,65 @@ export default function App() {
 
       </main>
 
+      {/* Premium Footer with Verification & Dofollow Links */}
+      <footer className="w-full bg-[#FAE8CC] border-t border-forest/15 py-8 px-6 sm:px-10 mt-auto shrink-0 z-10">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="text-center md:text-left">
+            <p className="text-xs text-forest/70 font-medium">
+              {lang === "en" ? (
+                <>
+                  © 2026 Bilingual Map Description Maker. A proud product by{" "}
+                  <a 
+                    href="https://ctbmarketing.com" 
+                    target="_blank" 
+                    rel="noopener" 
+                    className="text-forest hover:text-timber font-bold underline transition-colors"
+                  >
+                    CTB Digital Marketing
+                  </a>{" "}
+                  as part of the{" "}
+                  <a 
+                    href="https://rank-in-maps.com" 
+                    target="_blank" 
+                    rel="noopener" 
+                    className="text-forest hover:text-timber font-bold underline transition-colors"
+                  >
+                    Rank-in-Maps.com
+                  </a>{" "}
+                  project.
+                </>
+              ) : (
+                <>
+                  © 2026 เครื่องมือช่วยเขียนคำอธิบายหมุดร้านค้าสองภาษา พัฒนาโดย{" "}
+                  <a 
+                    href="https://ctbmarketing.com" 
+                    target="_blank" 
+                    rel="noopener" 
+                    className="text-forest hover:text-timber font-bold underline transition-colors"
+                  >
+                    CTB Digital Marketing
+                  </a>{" "}
+                  ซึ่งเป็นส่วนหนึ่งของโครงการ{" "}
+                  <a 
+                    href="https://rank-in-maps.com" 
+                    target="_blank" 
+                    rel="noopener" 
+                    className="text-forest hover:text-timber font-bold underline transition-colors"
+                  >
+                    Rank-in-Maps.com
+                  </a>
+                </>
+              )}
+            </p>
+          </div>
+          <div className="flex items-center gap-4 text-[11px] font-mono font-semibold text-[#CD966B]">
+            <span>v1.2.0</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-[#CD966B]"></span>
+            <span>Local SEO Project</span>
+          </div>
+        </div>
+      </footer>
+
       {/* Elegant Toast Alert */}
       <AnimatePresence>
         {copied && (
@@ -1441,6 +1593,30 @@ export default function App() {
             <div>
               <p className="text-xs font-bold uppercase tracking-wider text-[#FAE8CC] font-display">{t.copiedToastTitle}</p>
               <p className="text-[11px] text-[#FAE8CC]/80 mt-0.5">{t.copiedToastSubtitle}</p>
+            </div>
+          </motion.div>
+        )}
+
+        {explodedMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="fixed bottom-6 right-6 z-50 bg-[#FFF1CE] text-forest px-5 py-4 rounded-xl shadow-md flex items-center gap-3.5 border-2 border-amber-400"
+          >
+            <div className="w-10 h-10 bg-forest rounded-lg flex items-center justify-center shrink-0 border border-forest/12 text-lg">
+              🎉
+            </div>
+            <div>
+              <p className="text-xs font-black uppercase tracking-wider text-forest font-display">
+                {lang === "en" ? "🌟 EXPLOSION TRIGGERED! 🌟" : "🌟 ระเบิดดวงดาวทำงานแล้ว! 🌟"}
+              </p>
+              <p className="text-[11px] text-forest/90 mt-0.5 font-semibold">
+                {lang === "en" 
+                  ? "Thank you for supporting small Thai local businesses!" 
+                  : "ขอบคุณที่ร่วมสนับสนุนและช่วยเหลือธุรกิจไทยรายย่อย!"}
+              </p>
             </div>
           </motion.div>
         )}

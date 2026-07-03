@@ -117,7 +117,7 @@ export interface TranslationSchema {
 export const translations: Record<Language, TranslationSchema> = {
   en: {
     appTitle: "Bilingual Map Description Maker",
-    appSubtitle: "THAILAND MAPS",
+    appSubtitle: "Free tools to help Thai businesses",
     simpleEasy: "Simple & Easy",
     newSearch: "New Search",
     startOver: "Start Over",
@@ -238,7 +238,7 @@ export const translations: Record<Language, TranslationSchema> = {
   },
   th: {
     appTitle: "เครื่องมือเขียนคำอธิบายแผนที่สองภาษา",
-    appSubtitle: "แผนที่ประเทศไทย",
+    appSubtitle: "เครื่องมือช่วยธุรกิจไทยฟรี",
     simpleEasy: "ง่ายและสะดวก",
     newSearch: "ค้นหาใหม่",
     startOver: "เริ่มต้นใหม่",
