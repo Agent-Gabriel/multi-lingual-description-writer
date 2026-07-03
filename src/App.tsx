@@ -15,9 +15,12 @@ import {
   ChevronLeft, 
   HelpCircle,
   TrendingUp,
-  Maximize2
+  Maximize2,
+  FileDown
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
 import rankInMapsSpinning from "./assets/icons/rank-in-maps-spinning.gif";
 import speakIcon from "./assets/icons/speak.png";
 import phoneScrollingIcon from "./assets/icons/Phone Scrolling.png";
@@ -83,11 +86,21 @@ export default function App() {
   const [showUpsell, setShowUpsell] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [generationCount, setGenerationCount] = useState(0);
   
   // Interaction states
   const [searching, setSearching] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [exportingPdf, setExportingPdf] = useState(false);
+
+  // Load generation count on mount
+  useEffect(() => {
+    const saved = localStorage.getItem("gmaps_generation_count");
+    if (saved) {
+      setGenerationCount(parseInt(saved, 10));
+    }
+  }, []);
 
   // Animated loading simulation states
   const [progress, setProgress] = useState(0);
@@ -287,6 +300,11 @@ export default function App() {
     e.preventDefault();
     if (!bulletPoints || !coreKeyword || !district) return;
 
+    if (generationCount >= 2) {
+      setError(lang === "th" ? "คุณใช้สิทธิ์จำกัดการสร้างคำอธิบายครบ 2 ครั้งแล้ว" : "You have reached your limit of 2 generations.");
+      return;
+    }
+
     setView("loading_generate");
     setError(null);
     setShowUpsell(false);
@@ -307,6 +325,11 @@ export default function App() {
       setVariations(data.variations || []);
       setActiveTab(0);
       setView("output");
+
+      // Increment count on SUCCESSFUL generation
+      const newCount = generationCount + 1;
+      setGenerationCount(newCount);
+      localStorage.setItem("gmaps_generation_count", String(newCount));
     } catch (err: any) {
       setError(err.message || "Something went wrong.");
       setView("setup");
@@ -320,6 +343,45 @@ export default function App() {
     setTimeout(() => {
       setCopied(false);
     }, 3000);
+  };
+
+  const exportToPdf = async () => {
+    const element = document.getElementById("pdf-export-template");
+    if (!element) return;
+    
+    setExportingPdf(true);
+    try {
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#FAE8CC",
+        logging: false,
+      });
+      
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF("p", "mm", "a4");
+      
+      const pdfWidth = 210;
+      const pdfHeight = 297;
+      
+      const margin = 15;
+      const contentWidth = pdfWidth - (margin * 2);
+      const contentHeight = (canvas.height * contentWidth) / canvas.width;
+      
+      if (contentHeight + (margin * 2) < pdfHeight) {
+        const startY = (pdfHeight - contentHeight) / 2;
+        pdf.addImage(imgData, "PNG", margin, startY, contentWidth, contentHeight);
+      } else {
+        pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, (canvas.height * pdfWidth) / canvas.width);
+      }
+      
+      const fileName = `${businessName.toLowerCase().replace(/[^a-z0-9]+/g, "_")}_gmaps_description.pdf`;
+      pdf.save(fileName);
+    } catch (err) {
+      console.error("Failed to generate PDF:", err);
+    } finally {
+      setExportingPdf(false);
+    }
   };
 
   const handleReset = () => {
@@ -900,15 +962,49 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Big Generation Action Button */}
-                <button
-                  type="submit"
-                  disabled={!bulletPoints || !coreKeyword}
-                  className="w-full bg-forest hover:bg-forest/90 text-[#FAE8CC] py-4 px-6 rounded-xl font-bold text-sm tracking-wide uppercase transition-all shadow-sm hover:-translate-y-0.5 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
-                >
-                  <Sparkles className="w-4 h-4 animate-pulse" />
-                  {t.createDescriptionsButton}
-                </button>
+                {/* Big Generation Action Button & Quota Limits */}
+                {generationCount >= 2 ? (
+                  <div className="w-full bg-[#FFF1CE] border border-timber/30 rounded-xl p-5 flex flex-col gap-3.5 shadow-xs text-left animate-in fade-in duration-300">
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-timber/10 border border-timber/25 flex items-center justify-center shrink-0 mt-0.5">
+                        <Sparkles className="w-4 h-4 text-timber" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-bold text-forest font-display">
+                          {t.limitReachedTitle}
+                        </h4>
+                        <p className="text-xs text-forest/80 leading-relaxed mt-1">
+                          {t.limitReachedDesc}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="border-t border-forest/10 pt-3 flex flex-col gap-2.5">
+                      <a
+                        href={`mailto:gmb@ctbmarketing.com?subject=Bilingual%20Maps%20Description%20Maker%20-%20More%20Generations%20Request%20(${encodeURIComponent(businessName || "My Shop")})`}
+                        className="w-full bg-forest hover:bg-forest/90 text-[#FAE8CC] py-2.5 px-4 rounded-lg font-bold text-xs uppercase tracking-wider text-center transition-all inline-block hover:-translate-y-0.5 shadow-xs font-display"
+                      >
+                        {t.contactSupport}
+                      </a>
+                      <span className="text-[10px] font-mono text-forest/50 text-center block font-semibold">
+                        {t.attemptsLeftLabel.replace("{count}", String(generationCount))}
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="w-full flex flex-col gap-2">
+                    <button
+                      type="submit"
+                      disabled={!bulletPoints || !coreKeyword}
+                      className="w-full bg-forest hover:bg-forest/90 text-[#FAE8CC] py-4 px-6 rounded-xl font-bold text-sm tracking-wide uppercase transition-all shadow-sm hover:-translate-y-0.5 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
+                    >
+                      <Sparkles className="w-4 h-4 animate-pulse" />
+                      {t.createDescriptionsButton}
+                    </button>
+                    <span className="text-[10px] font-mono text-forest/50 text-center block font-semibold">
+                      {t.attemptsLeftLabel.replace("{count}", String(generationCount))}
+                    </span>
+                  </div>
+                )}
               </motion.div>
             </form>
           </div>
@@ -1059,15 +1155,45 @@ export default function App() {
                   />
                 </div>
 
-                {/* Regenerate Trigger */}
-                <button
-                  type="submit"
-                  disabled={!bulletPoints || !coreKeyword}
-                  className="mt-auto w-full bg-forest hover:bg-forest/90 text-[#FAE8CC] text-xs py-3 rounded-lg font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-                >
-                  <RefreshCw className="w-3.5 h-3.5" />
-                  {t.rewriteDescriptionsButton}
-                </button>
+                {/* Regenerate Trigger & Session Quota */}
+                {generationCount >= 2 ? (
+                  <div className="w-full bg-[#FAE8CC]/80 border border-timber/25 rounded-xl p-4 flex flex-col gap-3 text-left mt-auto animate-in fade-in duration-300">
+                    <div>
+                      <h4 className="text-xs font-bold text-forest font-display flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-timber" />
+                        {t.limitReachedTitle}
+                      </h4>
+                      <p className="text-[10px] text-forest/80 leading-relaxed mt-1">
+                        {t.limitReachedDesc}
+                      </p>
+                    </div>
+                    <div className="border-t border-forest/10 pt-2.5 flex flex-col gap-2">
+                      <a
+                        href={`mailto:gmb@ctbmarketing.com?subject=Bilingual%20Maps%20Description%20Maker%20-%20More%20Generations%20Request%20(${encodeURIComponent(businessName || "My Shop")})`}
+                        className="w-full bg-forest hover:bg-forest/90 text-[#FAE8CC] py-2 px-3 rounded-md font-bold text-[10px] uppercase tracking-wider text-center transition-all block font-display shadow-xs"
+                      >
+                        {t.contactSupport}
+                      </a>
+                      <span className="text-[9px] font-mono text-forest/50 text-center block font-semibold">
+                        {t.attemptsLeftLabel.replace("{count}", String(generationCount))}
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-1.5 mt-auto w-full">
+                    <button
+                      type="submit"
+                      disabled={!bulletPoints || !coreKeyword}
+                      className="w-full bg-forest hover:bg-forest/90 text-[#FAE8CC] text-xs py-3 rounded-lg font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" />
+                      {t.rewriteDescriptionsButton}
+                    </button>
+                    <span className="text-[9px] font-mono text-forest/50 text-center block font-semibold">
+                      {t.attemptsLeftLabel.replace("{count}", String(generationCount))}
+                    </span>
+                  </div>
+                )}
               </form>
             </aside>
 
@@ -1099,11 +1225,15 @@ export default function App() {
 
               {/* Main Copy Canvas Card */}
               <div className="flex-1 bg-[#FAE8CC] border border-forest/18 rounded-2xl flex flex-col min-h-0 shadow-sm relative group overflow-hidden">
-                <div className="absolute top-3 right-3 flex items-center gap-2 z-10">
+                {/* Header Bar to prevent absolute overlaps and improve padding */}
+                <div className="flex items-center justify-between px-6 py-3 border-b border-forest/12 bg-[#FFF1CE]/40 z-10">
+                  <span className="text-[10px] font-mono bg-[#FFF1CE] text-forest/80 px-2 py-1.5 rounded-lg border border-forest/15 font-bold">
+                    {isEditing ? t.editingModeLabel : t.readyLabel}
+                  </span>
                   <button
                     type="button"
                     onClick={() => setIsEditing(!isEditing)}
-                    className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1.5 rounded-lg border border-forest/18 bg-[#FAE8CC] hover:bg-[#F1CFAE]/30 text-forest transition-all flex items-center gap-1.5 cursor-pointer"
+                    className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1.5 rounded-lg border border-forest/18 bg-[#FAE8CC] hover:bg-[#F1CFAE]/30 text-forest transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
                   >
                     {isEditing ? (
                       <>
@@ -1117,9 +1247,6 @@ export default function App() {
                       </>
                     )}
                   </button>
-                  <span className="text-[10px] font-mono bg-[#FFF1CE] text-forest/80 px-2 py-1.5 rounded-lg border border-forest/15">
-                    {isEditing ? t.editingModeLabel : t.readyLabel}
-                  </span>
                 </div>
                 
                 {/* Result / Edit Block */}
@@ -1127,11 +1254,11 @@ export default function App() {
                   <textarea
                     value={currentVariation}
                     onChange={(e) => handleTextChange(e.target.value)}
-                    className="flex-1 w-full p-6 sm:p-8 pt-16 font-mono text-xs sm:text-sm leading-relaxed text-forest bg-[#FAE8CC] outline-none resize-none border-0 min-h-[250px] focus:bg-[#FFF1CE]/30"
+                    className="flex-1 w-full p-6 sm:p-8 font-mono text-xs sm:text-sm leading-relaxed text-forest bg-[#FAE8CC] outline-none resize-none border-0 min-h-[250px] focus:bg-[#FFF1CE]/30"
                     placeholder="Make changes to your description here directly to fit the limits..."
                   />
                 ) : (
-                  <div className="flex-1 p-6 sm:p-8 pt-16 font-sans text-sm sm:text-base leading-relaxed text-charcoal overflow-y-auto whitespace-pre-wrap selection:bg-[#F1CFAE]/60">
+                  <div className="flex-1 p-6 sm:p-8 font-sans text-sm sm:text-base leading-relaxed text-charcoal overflow-y-auto whitespace-pre-wrap selection:bg-[#F1CFAE]/60">
                     {renderBoldedText(currentVariation, coreKeyword)}
                   </div>
                 )}
@@ -1222,29 +1349,52 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* Copy CTA */}
-                  <button
-                    onClick={() => handleCopy(currentVariation)}
-                    className={`transition-all duration-300 text-[#FAE8CC] text-[11px] px-4 py-2.5 rounded-lg font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 border cursor-pointer ${
-                      copied 
-                        ? "bg-forest hover:bg-forest/90 border-transparent shadow-sm" 
-                        : totalOutputLength > 750
-                          ? "bg-[#CD966B] hover:bg-[#CD966B]/90 border-transparent shadow-sm"
-                          : "bg-forest hover:bg-forest/90 border-transparent shadow-sm"
-                    }`}
-                  >
-                    {copied ? (
-                      <>
-                        <Check className="w-3.5 h-3.5 text-[#FAE8CC]" />
-                        {t.copiedToastTitle}
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-3.5 h-3.5 text-[#FAE8CC]/80" />
-                        {totalOutputLength > 750 ? t.copyAnywayButton : t.copyDescriptionButton}
-                      </>
-                    )}
-                  </button>
+                  {/* Copy & Export CTA buttons */}
+                  <div className="flex items-center gap-2.5 shrink-0">
+                    {/* Export PDF CTA */}
+                    <button
+                      type="button"
+                      onClick={exportToPdf}
+                      disabled={exportingPdf}
+                      className="transition-all duration-300 bg-[#FAE8CC] hover:bg-[#F1CFAE]/40 text-forest border border-forest/30 text-[11px] px-4 py-2.5 rounded-lg font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    >
+                      {exportingPdf ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          {t.exportingPdfStatus}
+                        </>
+                      ) : (
+                        <>
+                          <FileDown className="w-3.5 h-3.5 text-forest/80" />
+                          {t.exportPdfButton}
+                        </>
+                      )}
+                    </button>
+
+                    {/* Copy CTA */}
+                    <button
+                      onClick={() => handleCopy(currentVariation)}
+                      className={`transition-all duration-300 text-[#FAE8CC] text-[11px] px-4 py-2.5 rounded-lg font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 border cursor-pointer ${
+                        copied 
+                          ? "bg-forest hover:bg-forest/90 border-transparent shadow-sm" 
+                          : totalOutputLength > 750
+                            ? "bg-[#CD966B] hover:bg-[#CD966B]/90 border-transparent shadow-sm"
+                            : "bg-forest hover:bg-forest/90 border-transparent shadow-sm"
+                      }`}
+                    >
+                      {copied ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-[#FAE8CC]" />
+                          {t.copiedToastTitle}
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5 text-[#FAE8CC]/80" />
+                          {totalOutputLength > 750 ? t.copyAnywayButton : t.copyDescriptionButton}
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -1295,6 +1445,106 @@ export default function App() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Hidden PDF Export Template */}
+      <div 
+        id="pdf-export-template" 
+        className="absolute -left-[9999px] -top-[9999px] w-[750px] p-10 flex flex-col gap-6 text-charcoal border-[12px] border-forest/15 select-none pointer-events-none"
+        style={{ fontFamily: '"DM Sans", sans-serif', backgroundColor: '#FAE8CC' }}
+      >
+        {/* Paper Grain Overlay */}
+        <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }} />
+
+        {/* Header */}
+        <div className="flex justify-between items-start relative z-10">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-xs uppercase font-bold tracking-wider text-timber font-mono">
+                {t.pdfReportTitle}
+              </span>
+              <span className="w-1.5 h-1.5 rounded-full bg-forest"></span>
+            </div>
+            <h1 className="text-3xl font-display font-extrabold text-forest tracking-tight">
+              {businessName || "My Shop"}
+            </h1>
+          </div>
+          
+          <div className="bg-glow border border-forest/15 rounded-xl px-4 py-2 text-right shrink-0">
+            <p className="text-[10px] font-mono font-bold text-forest uppercase tracking-widest">{t.appSubtitle}</p>
+            <p className="text-xs font-semibold text-timber mt-0.5">{t.simpleEasy}</p>
+          </div>
+        </div>
+
+        <div className="border-b border-forest/12 w-full relative z-10" />
+
+        {/* Bento Metadata Cards */}
+        <div className="grid grid-cols-3 gap-4 relative z-10">
+          <div className="bg-glow p-4 rounded-xl border border-forest/12 flex flex-col gap-1.5">
+            <span className="text-[10px] font-mono text-forest/60 font-bold uppercase tracking-wider">{t.pdfMetaKeyword}</span>
+            <span className="text-xs font-bold text-forest leading-tight">{coreKeyword || "-"}</span>
+          </div>
+          <div className="bg-glow p-4 rounded-xl border border-forest/12 flex flex-col gap-1.5">
+            <span className="text-[10px] font-mono text-forest/60 font-bold uppercase tracking-wider">{t.pdfMetaLocation}</span>
+            <span className="text-xs font-bold text-forest leading-tight">{district || "-"}</span>
+          </div>
+          <div className="bg-glow p-4 rounded-xl border border-forest/12 flex flex-col gap-1.5">
+            <span className="text-[10px] font-mono text-forest/60 font-bold uppercase tracking-wider">{t.totalLettersLabel}</span>
+            <span className={`text-xs font-bold leading-tight ${totalOutputLength > 750 ? 'text-rose-600' : 'text-forest'}`}>
+              {totalOutputLength} / 750
+            </span>
+          </div>
+        </div>
+
+        {/* Description sections */}
+        <div className="flex flex-col gap-5 mt-2 relative z-10">
+          {/* Thai Section */}
+          <div className="bg-glow/40 border border-forest/10 rounded-xl p-5 flex flex-col gap-2">
+            <h3 className="text-xs font-bold text-forest uppercase tracking-wider font-display border-b border-forest/10 pb-1.5">
+              {t.pdfThaiSection}
+            </h3>
+            <div className="text-sm text-charcoal leading-relaxed font-sans whitespace-pre-wrap">
+              {outputParts[0] || ""}
+            </div>
+          </div>
+
+          {/* Spacing Trick Marker */}
+          <div className="border-2 border-dashed border-timber/20 rounded-xl p-3 bg-peach/10 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-sm">⚡</span>
+              <span className="text-[11px] font-mono text-timber font-bold uppercase tracking-wider">
+                Mobile "Read More" Spacing Trick (2 Empty Lines)
+              </span>
+            </div>
+            <span className="text-[9px] font-bold text-forest bg-glow border border-forest/12 px-2 py-0.5 rounded uppercase font-mono">
+              Active
+            </span>
+          </div>
+
+          {/* English Section */}
+          <div className="bg-glow/40 border border-forest/10 rounded-xl p-5 flex flex-col gap-2">
+            <h3 className="text-xs font-bold text-forest uppercase tracking-wider font-display border-b border-forest/10 pb-1.5">
+              {t.pdfEnglishSection}
+            </h3>
+            <div className="text-sm text-charcoal leading-relaxed font-sans whitespace-pre-wrap">
+              {outputParts.slice(1).join("\n\n") || ""}
+            </div>
+          </div>
+        </div>
+
+        {/* Local SEO Strategy Guide */}
+        <div className="mt-4 bg-forest text-cream rounded-xl p-5 border border-forest/20 flex flex-col gap-3 relative z-10">
+          <h4 className="text-xs font-bold uppercase tracking-wider font-display text-peach">
+            {t.howGmapsWorksTitle}
+          </h4>
+          <p className="text-xs text-cream/90 leading-relaxed">
+            {t.howGmapsWorksDesc}
+          </p>
+          <div className="border-t border-cream/15 pt-2.5 flex justify-between items-center text-[10px] text-cream/75 font-mono">
+            <span>{t.pdfFooterNote}</span>
+            <span className="font-bold">Thailand Local SEO Blueprint</span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
